@@ -1,0 +1,20 @@
+name: zsh
+root: ~/
+
+windows:
+  - dotfiles:
+      layout: 8c58,252x68,0,0[252x34,0,0,0,252x33,0,35{126x33,0,35,1,125x33,127,35[125x9,127,35,2,125x10,127,45,7,125x12,127,56,3]}]
+      #layout: 10ad,144x76,0,0[144x39,0,0,0,144x12,0,40,3,144x23,0,53{72x23,0,53,1,71x23,73,53,4}]
+      # Synchronize all panes of this window, can be enabled before or after the pane commands run.
+      # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
+      # synchronize: after
+      panes:
+        - mfunc
+        - malias
+        - menv
+        - medit
+        - micro ~/.zprofile
+  - theme:
+      layout: main-vertical
+      panes:
+        - micro ~/.oh-my-zsh/themes/joe2.zsh-theme

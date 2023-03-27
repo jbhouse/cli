@@ -1,0 +1,8 @@
+#!/bin/bash
+
+alias win='/mnt/c'
+alias usr='/mnt/c/Users/$WIN_USER'
+alias code='Code.exe'
+alias clip='clip.exe'
+alias cmd='cmd.exe'
+alias idea='cmd.exe /c "idea64.exe"'

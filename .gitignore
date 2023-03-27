@@ -1,0 +1,7 @@
+.config/micro/backups/
+.config/micro/buffers/
+.config/micro/plug/
+.config/micro/buffers/history
+.config/btop/btop.log
+.config/tmuxinator/paths
+# .zsh_local

@@ -1,0 +1,130 @@
+#!/bin/bash
+# to replace first instance of *pattern*
+# | sed -n 's/pattern//p'
+# get everything after the first instance of the pattern
+# | sed -n '/:/s/pattern//p'
+# to remove everything after pattern
+# | sed 's/[pattern].*$//
+# s/          : substitute
+# .*crop=     : everything up to and including "crop="
+# \([0-9.:]\) : match only numbers and '.' and ':' - I call this the backslash-bracketed expression
+# \(.*\)      : match 'everything else' (probably not needed)
+# /\1/        : and replace with the first backslash-bracketed expression you found
+
+function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
+# function reports() { cmd.exe /c start microsoft-edge:$PWD/app/build/reports ;}
+
+function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*└── //' ;}
+
+function pipelines() {
+    if [ $# -eq 0 ];
+        then sh ~/Documents/utils/links/pipelines/$(ls ~/Documents/utils/links/pipelines | fzf);
+        else sh ~/Documents/utils/links/pipelines/$1.sh
+    fi
+}
+function crl() { sh ~/Documents/utils/curl/$(ls ~/Documents/utils/curl | fzf) $1 ;}
+function cc() { $* | $CLIPBOARD }
+function cpl() { fc -ln -1 | $CLIPBOARD }
+
+# maven functions
+function mist() { mvn -T 1C install $1 -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
+function mid() { mvn -pl $* -amd clean install ;}
+
+# tmux functions
+function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
+function smux() { PROJECT=$(ls ~/.config/tmuxinator | sed 's/[.].*$//' | fzf) ; if [ ! -z "$PROJECT" ]; then tmuxinator start $PROJECT; fi ;}
+function mux() { if [ $# -eq 0 ]; then muxr ; else tmuxinator start $*; fi ;}
+function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
+function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
+function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
+
+# Docker functions
+function dockk() { # double check | grep -v k8s |
+  yes | docker volume prune
+  idx=0
+  for i in $(docker container ls | grep -v k8s | awk '{print $1}'); do
+    ((idx >= 1)) && echo "$i" is being deleted && docker stop "$i" 1> /dev/null && docker rm "$i" 1> /dev/null;
+    ((idx++))
+  done
+}
+function dockr() { yes | docker volume prune && docker compose up --force-recreate -d ;}
+function docku() { yes | docker volume prune && docker compose up -d ;}
+
+# git functions
+function gitr() {
+  FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
+  if [ ! -z "$FILE" ]
+    then for i in $(printf %b $FILE); do git checkout $i; done
+    else echo 'no files selected, no changes made'
+  fi
+}
+function gitu() {
+  FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
+  if [ ! -z "$FILE" ]
+    then for i in $(printf %b $FILE); do git restore --staged $i; done
+    else echo 'no files selected, no changes made'
+  fi
+}
+function gsa() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function gsds() {
+  STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
+  echo $STASHES
+  if [ ! -z "$STASHES" ]
+    then for i in $(printf %b $STASHES); do git stash drop $i; done
+    else echo 'no stashes select or dropped'
+  fi
+}
+#function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
+function gac() { git add -i ; BRANCH=$(branch) ; git commit -m "${BRANCH} : $*" ;}
+function gacp() {
+  BRANCH=$(branch)
+  if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]];
+    then echo "are you sure you want to push to ${BRANCH}? y/n" ; read answer ;
+    if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]]
+      then git add . ; git commit -m "${BRANCH} : $*" ; git push ;
+      else echo "commit/push aborted."
+    fi
+    else git add . ; git commit -m "${BRANCH} : $*" ; git push --set-upstream origin ${BRANCH} ;
+  fi
+}
+function gcob () {
+    git pull
+    if [[ `git status --porcelain` ]];
+      then
+        git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
+        if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
+          then git stash
+          else echo commit message: ; read message ; git commit . -m "$(branch) : $message"
+        fi
+        git pull
+    else
+        if [ -z "$1" ]
+          then git checkout $(branches)
+          else git checkout $1
+        fi
+        git pull
+    fi
+}
+
+# editor functions
+function ij() { (cd ~/repos && idea $(ls | fzf)) ;}
+function io() { (cd ~/tmp && idea $(ls | fzf)) ;}
+
+# random functions
+function mkd() { mkdir "$*" && cd "$*" ;}
+function functions() { cat ~/.zsh_functions | grep function ;}
+function aliases() { cat ~/.zsh_aliases | grep alias ;}
+function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
+function hist() { num=$(history | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); eval $num ;}
+
+# environment management functions
+function j8() { updateEnvFile 8 ;}
+function j11() { updateEnvFile 11 ;}
+function j17() { updateEnvFile 17 ;}
+function backup() { (cd ~/Documents/utils && git add . && gacp $*) ;}
+
+# searching functions
+function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
+function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
+function rgf() { rg --hidden $1 $2 -l | preview ;}
+function preview() { fzf --preview 'batcat --style numbers,changes --color=always {}' ;}

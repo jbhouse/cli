@@ -1,0 +1,52 @@
+# run install script
+# source ~/.zshrc
+fresh
+
+sudo apt install zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+(cd /usr/bin && curl https://getmic.ro/r | sudo sh)
+
+#fzf-tab is broken on more recent commits
+git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
+# autosuggestions have the double enter issue
+# git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+
+sudo apt install fzf
+sudo apt-get install openjdk-8-jdk
+sudo apt-get install openjdk-11-jdk
+sudo apt-get install openjdk-17-jdk
+sudo apt-get install tmuxinator
+sudo apt install bat
+sudo apt-get install ripgrep
+
+# to generate public key for github access
+ssh-keygen -t ed25519 -C "your.email@domain.com"
+eval "$(ssh-agent -s)"
+clip.exe < ~/.ssh/id_ed25519.pub
+mv ~/.ssh/id_ed25519 ~/.ssh/id_ed25519.joe && mv ~/.ssh/id_ed25519.pub ~/.ssh/id_ed25519.pub.joe && ln -s ~/.ssh/id_ed25519.joe ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.pub.joe ~/.ssh/id_ed25519.pub
+
+# to resolve - /sbin/ldconfig.real: /usr/lib/wsl/lib/libcuda.so.1 is not a symbolic link
+# https://github.com/microsoft/WSL/issues/5663
+
+# Run a command line shell as Administrator, type "cmd" to get a non-powershell command line.
+# Then type the following commands to create the problematic symbolic links:
+
+# C:
+# cd \Windows\System32\lxss\lib
+# del libcuda.so
+# del libcuda.so.1
+# mklink libcuda.so libcuda.so.1.1
+# mklink libcuda.so.1 libcuda.so.1.1
+
+#k3s
+#wget https://github.com/k3s-io/k3s/releases/download/v1.26.0%2Bk3s1/k3s
+#sudo mv k3s /usr/local/bin
+#sudo chmod u+x /usr/local/bin/k3s
+
+curl -sfL https://get.k3s.io | sh -
+#Created symlink /etc/systemd/system/multi-user.target.wants/k3s.service → /etc/systemd/system/k3s.service.
+#System has not been booted with systemd as init system (PID 1). Can't operate.
+#Failed to connect to bus: Host is down
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash

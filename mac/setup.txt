@@ -1,0 +1,21 @@
+/bin/bash -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+mv ~/.zshrc ~/.zshrc.bak
+sh ~/Documents/utils/.install.sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+cd $ZSH_CUSTOM/plugins && git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+brew install openjdk@11
+sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+brew install openjdk@17
+sudo ln -sfn /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+brew install tmux
+brew install fzf
+# brew install --cask alt-tab
+brew install htop
+
+-------
+to set up cli launcher
+
+https://emmanuelbernard.com/blog/2017/02/27/start-intellij-idea-command-line/
+-------
+
+

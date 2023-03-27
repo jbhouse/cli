@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# For a full list of active aliases, run `alias`.
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias .....='cd ../../../..'
+
+# For a full list of active aliases, run `alias`.
+alias update="$UPDATE"
+alias fresh="$FRESH"
+
+alias cdr="cd ~/repos"
+alias cdt="cd ~/tmp"
+alias utils="cd ~/Documents/utils"
+alias pwdc="pwd | $CLIPBOARD"
+
+#editor aliases
+alias medit="micro ~/.zshrc"
+alias menv="micro ~/.zshenv"
+alias malias="micro ~/.zsh_aliases"
+alias mfunc="micro ~/.zsh_functions"
+alias mlocal="micro ~/.zsh_local/.zsh_env_local"
+#alias mutils="mux with utils as input"
+
+alias cedit="code ~/.zshrc"
+alias cenv="code ~/.zshenv"
+alias calias="code ~/.zsh_aliases"
+alias cfunc="code ~/.zsh_functions"
+alias cutils="code ~/Documents/utils"
+alias clocal="code ~/.zsh_local/.zsh_env_local"
+
+alias iedit='idea ~/.zshrc'
+alias ienv='idea ~/.zshenv'
+alias ialias="micro ~/.zsh_aliases"
+alias ifunc="micro ~/.zsh_functions"
+alias iutils="idea ~/Documents/utils"
+alias ilocal="idea ~/.zsh_local/.zsh_env_local"
+
+# git aliases
+alias gs="git status"
+alias gas="git add . && git stash"
+alias gaso="git stash apply 0"
+alias gpo="git pull origin"
+# this will unstage the last commit
+alias gu="git reset --soft HEAD~1"
+#alias gb="git branch --show-current"
+alias branches="git branch -r | sed \"s|origin/||\" | fzf"
+alias branch="git branch --show-current"
+alias gbc="branch | $CLIPBOARD"
+alias gcb="git checkout -b"
+alias gcom="git checkout main && git pull"
+alias gpom="git pull origin main"
+alias clone="git clone"
+alias gsl="git stash list"
+alias gdb="git branch -D"
+
+#alias dc="docker compose"
+#alias dp="docker system prune -f --volumes"
+
+alias jh="echo $JAVA_HOME"
+alias utils="cd ~/Documents/utils"
+alias repos="cd ~/repos"
+
+alias tls="tmux ls"
+alias tka="tmux kill-server"
+
+alias kubectl="k3s kubectl"
+
+alias la='ls -A'
+alias q='exit'
+alias c='clear'
+alias h='history'
+alias home='cd ~'
+alias ex="/mnt/c/Windows/explorer.exe"
+alias ll='ls -alF'
+alias l='ls -CF'
+alias lsg='ls | grep'
