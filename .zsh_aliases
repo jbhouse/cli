@@ -12,7 +12,7 @@ alias fresh="$FRESH"
 
 alias cdr="cd ~/repos"
 alias cdt="cd ~/tmp"
-alias utils="cd ~/Documents/utils"
+alias cli="cd ~/Documents/cli"
 alias pwdc="pwd | $CLIPBOARD"
 
 #editor aliases
@@ -21,20 +21,20 @@ alias menv="micro ~/.zshenv"
 alias malias="micro ~/.zsh_aliases"
 alias mfunc="micro ~/.zsh_functions"
 alias mlocal="micro ~/.zsh_local/.zsh_env_local"
-#alias mutils="mux with utils as input"
+#alias mcli="mux with cli as input"
 
 alias cedit="code ~/.zshrc"
 alias cenv="code ~/.zshenv"
 alias calias="code ~/.zsh_aliases"
 alias cfunc="code ~/.zsh_functions"
-alias cutils="code ~/Documents/utils"
+alias ccli="code ~/Documents/cli"
 alias clocal="code ~/.zsh_local/.zsh_env_local"
 
 alias iedit='idea ~/.zshrc'
 alias ienv='idea ~/.zshenv'
 alias ialias="micro ~/.zsh_aliases"
 alias ifunc="micro ~/.zsh_functions"
-alias iutils="idea ~/Documents/utils"
+alias icli="idea ~/Documents/cli"
 alias ilocal="idea ~/.zsh_local/.zsh_env_local"
 
 # git aliases
@@ -59,7 +59,7 @@ alias gdb="git branch -D"
 #alias dp="docker system prune -f --volumes"
 
 alias jh="echo $JAVA_HOME"
-alias utils="cd ~/Documents/utils"
+alias cli="cd ~/Documents/cli"
 alias repos="cd ~/repos"
 
 alias tls="tmux ls"

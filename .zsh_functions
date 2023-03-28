@@ -18,11 +18,11 @@ function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*�
 
 function pipelines() {
     if [ $# -eq 0 ];
-        then sh ~/Documents/utils/links/pipelines/$(ls ~/Documents/utils/links/pipelines | fzf);
-        else sh ~/Documents/utils/links/pipelines/$1.sh
+        then sh ~/Documents/cli/links/pipelines/$(ls ~/Documents/cli/links/pipelines | fzf);
+        else sh ~/Documents/cli/links/pipelines/$1.sh
     fi
 }
-function crl() { sh ~/Documents/utils/curl/$(ls ~/Documents/utils/curl | fzf) $1 ;}
+function crl() { sh ~/Documents/cli/curl/$(ls ~/Documents/cli/curl | fzf) $1 ;}
 function cc() { $* | $CLIPBOARD }
 function cpl() { fc -ln -1 | $CLIPBOARD }
 
@@ -121,7 +121,7 @@ function hist() { num=$(history | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | se
 function j8() { updateEnvFile 8 ;}
 function j11() { updateEnvFile 11 ;}
 function j17() { updateEnvFile 17 ;}
-function backup() { (cd ~/Documents/utils && git add . && gacp $*) ;}
+function backup() { (cd ~/Documents/cli && git add . && gacp $*) ;}
 
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}

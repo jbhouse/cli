@@ -93,7 +93,7 @@ function cg-topics() {
     getEnv
     for t in `~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --bootstrap-server $bootstrapServers --list 2>/dev/null`; do
         ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --bootstrap-server $bootstrapServers --describe --group $t
-    done > ~/Documents/utils/topic-consumer-$KAFKA_ENV.txt
+    done > ~/Documents/cli/topic-consumer-$KAFKA_ENV.txt
 }
 
 function deleteTopic() {

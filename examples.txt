@@ -6,7 +6,7 @@ export CLIPBOARD='pbcopy'
 export FRESH='source ~/.zshrc && source ~/.zprofile'
 
 function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args $* ;}
-function updateEnvFile() { gsed -i "/JAVA_HOME=/c export JAVA_HOME=/opt/homebrew/opt/$(ls /opt/homebrew/opt/ | grep openjdk@$1)" ~/Documents/utils/.zshenv && fresh ;}
+function updateEnvFile() { gsed -i "/JAVA_HOME=/c export JAVA_HOME=/opt/homebrew/opt/$(ls /opt/homebrew/opt/ | grep openjdk@$1)" ~/Documents/cli/.zshenv && fresh ;}
 function hub() { open -a "Google Chrome" $(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p') ;}
 
 EOF
