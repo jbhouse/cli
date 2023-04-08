@@ -4,4 +4,5 @@
 .config/micro/buffers/history
 .config/btop/btop.log
 .config/tmuxinator/paths
+.config/tmuxinator/proxy.yml
 # .zsh_local
