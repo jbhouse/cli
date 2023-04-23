@@ -26,7 +26,8 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # plugins=(git zsh-autosuggestions)
-plugins=(git fzf-tab)
+# plugins=(git fzf-tab)
+plugins=(git fzf-tab zsh-autosuggestions)
 
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 source ~/.oh-my-zsh/oh-my-zsh.sh

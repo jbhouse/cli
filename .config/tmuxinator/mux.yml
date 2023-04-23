@@ -11,3 +11,4 @@ windows:
         - micro ~/.config/tmuxinator/mux.yml
         - micro ~/.config/tmuxinator/zsh.yml
         - micro ~/.config/tmuxinator/micro.yml
+        - micro ~/.config/tmuxinator/proxy.yml
