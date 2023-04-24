@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 mv ~/.zshrc ~/.zshrc.bak
 mkdir ~/.zsh_local
@@ -30,7 +30,7 @@ fi
 ln -s $(pwd)/$OS_NAME/.env_vars ~/.zsh_local/.env_vars
 ln -s $(pwd)/$OS_NAME/.functions ~/.zsh_local/.functions
 if [ -f $(pwd)/$OS_NAME/.aliases ]
-  then ln -s $(pwd)/$OS_NAME/.aliases ~/.zsh_local/.aliases 
+  then ln -s $(pwd)/$OS_NAME/.aliases ~/.zsh_local/.aliases
 fi
 ln -s $(pwd)/$OS_NAME/.env_vars ~/.zsh_env
 ln -s $(pwd)/$OS_NAME/.zprofile ~/.zprofile
