@@ -121,12 +121,12 @@ function deleteSchema() {
   fi
 
   curl --location --request DELETE 'https://schema-registry.'$KAFKA_ENV'.aws-ue1.happymoney.com/subjects/'$tName'-value?permanent=false' \
-  --header 'Cookie: AWSALB=2pJ9TSoeM3AT/DY5YVLe1xyTqFoRT69RqNBdHQweQ65gKjsTf4vveJSA1ZKyUZ/QHeCOTax1q/A/PQBTltH+eEHLC06RmdOt4jQ5FISnPFYIuOZcXuZr3Sf1B++d; AWSALBCORS=2pJ9TSoeM3AT/DY5YVLe1xyTqFoRT69RqNBdHQweQ65gKjsTf4vveJSA1ZKyUZ/QHeCOTax1q/A/PQBTltH+eEHLC06RmdOt4jQ5FISnPFYIuOZcXuZr3Sf1B++d'
+  --header 'Cookie: AWSALB=; AWSALBCORS='
 
   echo \n
 
   curl --location --request DELETE 'https://schema-registry.'$KAFKA_ENV'.aws-ue1.happymoney.com/subjects/'$tName'-value?permanent=true' \
-  --header 'Cookie: AWSALB=2pJ9TSoeM3AT/DY5YVLe1xyTqFoRT69RqNBdHQweQ65gKjsTf4vveJSA1ZKyUZ/QHeCOTax1q/A/PQBTltH+eEHLC06RmdOt4jQ5FISnPFYIuOZcXuZr3Sf1B++d; AWSALBCORS=2pJ9TSoeM3AT/DY5YVLe1xyTqFoRT69RqNBdHQweQ65gKjsTf4vveJSA1ZKyUZ/QHeCOTax1q/A/PQBTltH+eEHLC06RmdOt4jQ5FISnPFYIuOZcXuZr3Sf1B++d'
+  --header 'Cookie: AWSALB=; AWSALBCORS='
 }
 
 function topics-confluent-read-end() {

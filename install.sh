@@ -73,6 +73,7 @@ echo
 
 if [[ "${kafka_func}" == "Y" ]] || [[ "${kafka_func}" == "y" ]]
   then ln -s $(pwd)/util_functions/.kafka_functions ~/.zsh_local/.kafka_functions
+  brew install kafka
 fi
 
 if [ -f ~/.gitconfig ] 
