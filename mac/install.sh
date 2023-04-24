@@ -39,12 +39,18 @@ fi
 
 if [[ "${install11}" == "Y" ]] || [[ "${install11}" == "y" ]]
   then brew install openjdk@11
+  # && sudo ln -sfn /usr/local/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+  # intel
   # && sudo ln -sfn /opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-11.jdk
+  # m1
 fi
 
 if [[ "${install17}" == "Y" ]] || [[ "${install17}" == "y" ]]
   then brew install openjdk@17
+  # && sudo ln -sfn /usr/local/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+  # intel
   # && sudo ln -sfn /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
+  # m1
 fi
 
 softwareupdate --install-rosetta
