@@ -128,4 +128,4 @@ function backup() { (cd ~/Documents/cli && git add . && gacp $*) ;}
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function rgf() { rg --hidden $1 $2 -l | preview ;}
-function preview() { fzf --preview 'batcat --style numbers,changes --color=always {}' ;}
+function preview() { fzf --preview 'bat --style numbers,changes --color=always {}' ;}

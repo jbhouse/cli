@@ -1,4 +1,4 @@
-# eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(/opt/homebrew/bin/brew shellenv)"
 #M1 ^
-eval "$(/usr/local/Homebrew/bin/brew shellenv)"
+# eval "$(/usr/local/Homebrew/bin/brew shellenv)"
 #intel ^
