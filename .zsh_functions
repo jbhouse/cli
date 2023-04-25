@@ -116,7 +116,6 @@ function functions() { cat ~/.zsh_functions | grep function ;}
 function aliases() { cat ~/.zsh_aliases | grep alias ;}
 function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
 function hist() { num=$(history | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); eval $num ;}
-function proxy() { ssh -i ~/.ssh/myProxyKeys.pem $PROXY -D $1 }
 
 # environment management functions
 function j8() { updateEnvFile 8 ;}
