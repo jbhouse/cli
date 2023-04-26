@@ -22,6 +22,8 @@ brew install bat
 brew install ripgrep
 brew install btop
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+brew install bat
+brew install rectangle
 
 echo '----------------------------'
 echo 'install openjdk 8? (y/Y) or (n/N)'
