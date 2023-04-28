@@ -29,11 +29,11 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # plugins=(git fzf-tab)
 plugins=(git fzf-tab zsh-autosuggestions)
 
-if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 source ~/.oh-my-zsh/oh-my-zsh.sh
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
+if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # disable sort when completing `git checkout`

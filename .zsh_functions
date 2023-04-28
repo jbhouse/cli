@@ -4,7 +4,7 @@
 # get everything after the first instance of the pattern
 # | sed -n '/:/s/pattern//p'
 # to remove everything after pattern
-# | sed 's/[pattern].*$//
+# | sed 's/[pattern].*$//'
 # s/          : substitute
 # .*crop=     : everything up to and including "crop="
 # \([0-9.:]\) : match only numbers and '.' and ':' - I call this the backslash-bracketed expression
