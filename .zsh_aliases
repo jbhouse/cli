@@ -65,7 +65,7 @@ alias repos="cd ~/repos"
 alias tls="tmux ls"
 alias tka="tmux kill-server"
 
-alias kubectl="k3s kubectl"
+# alias kubectl="k3s kubectl"
 
 alias la='ls -A'
 alias q='exit'

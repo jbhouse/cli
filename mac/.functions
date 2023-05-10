@@ -5,5 +5,5 @@ function updateEnvFile() {
     gsed -i "/JAVA_HOME=/c export JAVA_HOME=/Library/Java/JavaVirtualMachines/$(ls /Library/Java/JavaVirtualMachines/ | grep jdk-$1)/Contents/Home" ~/.zsh_env
     fresh
 }
-function hub() { open -a "Google Chrome" $(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p') ;}
+# function hub() { open -a "Google Chrome" $(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p') ;}
 # function reports() { open -a "Google Chrome" $PWD/app/build/reports }
