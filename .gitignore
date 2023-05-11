@@ -5,4 +5,5 @@
 .config/btop/btop.log
 .config/tmuxinator/paths
 .config/tmuxinator/proxy.yml
+.config/tmuxinator/logs*
 # .zsh_local
