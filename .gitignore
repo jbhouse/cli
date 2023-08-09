@@ -6,4 +6,5 @@
 .config/tmuxinator/paths
 .config/tmuxinator/proxy.yml
 .config/tmuxinator/logs*
+.config/tmuxinator/consumer*
 # .zsh_local

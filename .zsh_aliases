@@ -58,7 +58,6 @@ alias gdb="git branch -D"
 #alias dc="docker compose"
 #alias dp="docker system prune -f --volumes"
 
-alias jh="echo $JAVA_HOME"
 alias cli="cd ~/Documents/cli"
 alias repos="cd ~/repos"
 

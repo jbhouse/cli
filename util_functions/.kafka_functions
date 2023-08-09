@@ -1,264 +1,271 @@
 #!/bin/bash
 
+function getTopicName() {
+  source ~/.zsh_env
+  TOPIC_NAME=$(cat ~/.zsh_local/kafka_map.json | jq | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//')
+  # jq -rc . ~/Documents/kafka_messages/$TOPIC_NAME.json | kafka-console-producer --broker-list kafka-$1-it-mdpo-mobile-1.it-mdpo-mobile.spectrum.net:9092,kafka-$1-it-mdpo-mobile-2.it-mdpo-mobile.spectrum.net:9092,kafka-$1-it-mdpo-mobile-3.it-mdpo-mobile.spectrum.net:9092 --topic $TOPIC_NAME
+  jq -rc . ~/Documents/kafka_messages/$TOPIC_NAME.json | kafka-console-producer --broker-list $BOOTSTRAP_SERVER --topic $TOPIC_NAME
+}
+
 # todo
 # swap ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups for a brew install
 # update this to keep broker urls out of version control using another local unlinked file
 
-export DEV_MSK_BROKERS=
-export DEV_MSK_SCHEMA_REGISTRY=
-export DEV_ZOOKEEPERS=
+# export DEV_MSK_BROKERS=
+# export DEV_MSK_SCHEMA_REGISTRY=
+# export DEV_ZOOKEEPERS=
 
-export QA_MSK_BROKERS=
-export QA_MSK_SCHEMA_REGISTRY=
-export QA_ZOOKEEPERS=
+# export QA_MSK_BROKERS=
+# export QA_MSK_SCHEMA_REGISTRY=
+# export QA_ZOOKEEPERS=
 
-export QA1_MSK_BROKERS=
-export QA1_MSK_SCHEMA_REGISTRY=
-export QA1_ZOOKEEPERS=
+# export QA1_MSK_BROKERS=
+# export QA1_MSK_SCHEMA_REGISTRY=
+# export QA1_ZOOKEEPERS=
 
-export UAT_MSK_BROKERS=
-export UAT_MSK_SCHEMA_REGISTRY=
-export UAT_ZOOKEEPERS=
+# export UAT_MSK_BROKERS=
+# export UAT_MSK_SCHEMA_REGISTRY=
+# export UAT_ZOOKEEPERS=
 
-export STAGE_MSK_BROKERS=
-export STAGE_MSK_SCHEMA_REGISTRY=
-export STAGE_ZOOKEEPERS=
+# export STAGE_MSK_BROKERS=
+# export STAGE_MSK_SCHEMA_REGISTRY=
+# export STAGE_ZOOKEEPERS=
 
-export PROD_MSK_BROKERS=
-export PROD_MSK_SCHEMA_REGISTRY=
-export PROD_ZOOKEEPERS=
+# export PROD_MSK_BROKERS=
+# export PROD_MSK_SCHEMA_REGISTRY=
+# export PROD_ZOOKEEPERS=
 
-export DEV_CONFLUENT_BROKERS=
-export DEV_CONFLUENT_SCHEMA_REGISTRY=
+# export DEV_CONFLUENT_BROKERS=
+# export DEV_CONFLUENT_SCHEMA_REGISTRY=
 
-export QA_CONFLUENT_BROKERS=
-export QA_CONFLUENT_SCHEMA_REGISTRY=
+# export QA_CONFLUENT_BROKERS=
+# export QA_CONFLUENT_SCHEMA_REGISTRY=
 
-export QA1_CONFLUENT_BROKERS=
-export QA1_CONFLUENT_SCHEMA_REGISTRY=
+# export QA1_CONFLUENT_BROKERS=
+# export QA1_CONFLUENT_SCHEMA_REGISTRY=
 
-export UAT_CONFLUENT_BROKERS=
-export UAT_CONFLUENT_SCHEMA_REGISTRY=
+# export UAT_CONFLUENT_BROKERS=
+# export UAT_CONFLUENT_SCHEMA_REGISTRY=
 
-export STAGE_CONFLUENT_BROKERS=
-export STAGE_CONFLUENT_SCHEMA_REGISTRY=
+# export STAGE_CONFLUENT_BROKERS=
+# export STAGE_CONFLUENT_SCHEMA_REGISTRY=
 
-# function localEnv() {
-# 	environments=("dev" "qa" "qa1" "uat")
-# 	for i in "${environments[@]}"
-# 	do
-# 	    for t in $(ls env/$i); do
-# 	        if [[ "$t" != *"local-"* ]]
-#                 then
-#                   cp env/$i/$t env/$i/local-$t
-#                   gsed -i "/AMAZON_DYNAMODB_ENDPOINT=/c AMAZON_DYNAMODB_ENDPOINT=http://localhost:4598" env/$i/local-$t
-#                   gsed -i "/SPRING_DATA_DYNAMODB_ENTITY2DDL_AUTO=/c SPRING_DATA_DYNAMODB_ENTITY2DDL_AUTO=create" env/$i/local-$t
-# 	        fi
-# 	    done
-# 	done
+# # function localEnv() {
+# # 	environments=("dev" "qa" "qa1" "uat")
+# # 	for i in "${environments[@]}"
+# # 	do
+# # 	    for t in $(ls env/$i); do
+# # 	        if [[ "$t" != *"local-"* ]]
+# #                 then
+# #                   cp env/$i/$t env/$i/local-$t
+# #                   gsed -i "/AMAZON_DYNAMODB_ENDPOINT=/c AMAZON_DYNAMODB_ENDPOINT=http://localhost:4598" env/$i/local-$t
+# #                   gsed -i "/SPRING_DATA_DYNAMODB_ENTITY2DDL_AUTO=/c SPRING_DATA_DYNAMODB_ENTITY2DDL_AUTO=create" env/$i/local-$t
+# # 	        fi
+# # 	    done
+# # 	done
+# # }
+
+# function list-envs() { echo 'dev\nqa\nqa1\nuat\nstage\n\nChoose the environment. Current environment: ' $KAFKA_ENV | fzf ;}
+
+# function topics-confluent-list() {
+#   # this only works for dev right now
+#   IN=$(curl -u $CONFLUENT_PASSWORD $CONFLUENT_SUBJECT_URL)
+#   echo $IN | tr -d ']' | tr -d '[' | tr "," "\n" | gsed 's|"||g' | gsed 's|-value||g' | fzf
 # }
 
-function list-envs() { echo 'dev\nqa\nqa1\nuat\nstage\n\nChoose the environment. Current environment: ' $KAFKA_ENV | fzf ;}
+# function topics-msk-list() {
+#   if [[ -z "$KAFKA_ENV" ]]
+#     then getEnv
+#   fi
+#   ~/Downloads/kafka-2.7.0-src/bin/./kafka-topics.sh --bootstrap-server $bootstrapServers --list 2> /dev/null | fzf
+# }
 
-function topics-confluent-list() {
-  # this only works for dev right now
-  IN=$(curl -u $CONFLUENT_PASSWORD $CONFLUENT_SUBJECT_URL)
-  echo $IN | tr -d ']' | tr -d '[' | tr "," "\n" | gsed 's|"||g' | gsed 's|-value||g' | fzf
-}
+# # update to take optional group name
+# function cg-delete() {
+#     getEnv
+#     ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --delete --bootstrap-server $bootstrapServers --group $1
+# }
 
-function topics-msk-list() {
-  if [[ -z "$KAFKA_ENV" ]]
-    then getEnv
-  fi
-  ~/Downloads/kafka-2.7.0-src/bin/./kafka-topics.sh --bootstrap-server $bootstrapServers --list 2> /dev/null | fzf
-}
+# function cg-describe() {
+#     getEnv
+#     ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --describe --bootstrap-server $bootstrapServers --group $1
+# }
 
-# update to take optional group name
-function cg-delete() {
-    getEnv
-    ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --delete --bootstrap-server $bootstrapServers --group $1
-}
+# function cg-list() {
+#     getEnv
+#     ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --list --bootstrap-server $bootstrapServers
+# }
 
-function cg-describe() {
-    getEnv
-    ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --describe --bootstrap-server $bootstrapServers --group $1
-}
+# function cg-topics() {
+#     getEnv
+#     for t in `~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --bootstrap-server $bootstrapServers --list 2>/dev/null`; do
+#         ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --bootstrap-server $bootstrapServers --describe --group $t
+#     done > ~/Documents/cli/topic-consumer-$KAFKA_ENV.txt
+# }
 
-function cg-list() {
-    getEnv
-    ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --list --bootstrap-server $bootstrapServers
-}
+# function deleteTopic() {
+#   getEnv $1
 
-function cg-topics() {
-    getEnv
-    for t in `~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --bootstrap-server $bootstrapServers --list 2>/dev/null`; do
-        ~/Downloads/confluent-7.2.1/bin/kafka-consumer-groups --bootstrap-server $bootstrapServers --describe --group $t
-    done > ~/Documents/cli/topic-consumer-$KAFKA_ENV.txt
-}
+#   if [[ -z $2 ]]
+#     then
+#       export tName=$(topics-msk-list)
+#     else
+#       export tName=$2
+#   fi
 
-function deleteTopic() {
-  getEnv $1
+#   ~/Downloads/kafka-2.7.0-src/bin/kafka-topics.sh --zookeeper $MYZK --delete --topic $tName 2> /dev/null
+# }
 
-  if [[ -z $2 ]]
-    then
-      export tName=$(topics-msk-list)
-    else
-      export tName=$2
-  fi
+# # eventually set things up to use multi-select and run against many topics at once
+# function deleteSchema() {
+#   getEnv $1
 
-  ~/Downloads/kafka-2.7.0-src/bin/kafka-topics.sh --zookeeper $MYZK --delete --topic $tName 2> /dev/null
-}
+#   if [[ -z $2 ]]
+#     then
+#       export tName=$(topics-msk-list)
+#     else
+#       export tName=$2
+#   fi
 
-# eventually set things up to use multi-select and run against many topics at once
-function deleteSchema() {
-  getEnv $1
+#   curl --location --request DELETE 'https://schema-registry.'$KAFKA_ENV'.aws-ue1.happymoney.com/subjects/'$tName'-value?permanent=false' \
+#   --header 'Cookie: AWSALB=; AWSALBCORS='
 
-  if [[ -z $2 ]]
-    then
-      export tName=$(topics-msk-list)
-    else
-      export tName=$2
-  fi
+#   echo \n
 
-  curl --location --request DELETE 'https://schema-registry.'$KAFKA_ENV'.aws-ue1.happymoney.com/subjects/'$tName'-value?permanent=false' \
-  --header 'Cookie: AWSALB=; AWSALBCORS='
+#   curl --location --request DELETE 'https://schema-registry.'$KAFKA_ENV'.aws-ue1.happymoney.com/subjects/'$tName'-value?permanent=true' \
+#   --header 'Cookie: AWSALB=; AWSALBCORS='
+# }
 
-  echo \n
+# function topics-confluent-read-end() {
 
-  curl --location --request DELETE 'https://schema-registry.'$KAFKA_ENV'.aws-ue1.happymoney.com/subjects/'$tName'-value?permanent=true' \
-  --header 'Cookie: AWSALB=; AWSALBCORS='
-}
+#   getTopicNameAndEnv "confluent" $1 $2
+#   if [[ -z "$TOPIC_NAME" ]] || [[ -z "$KAFKA_ENV" ]]
+#     then
+#       echo topic: $TOPIC_NAME
+#       echo environment: $KAFKA_ENV
+#       echo 'both must be provided in order for the command to run'
+#     else
+#       echo " "
+#       echo reading from topic: $TOPIC_NAME
+#       echo in environment: $KAFKA_ENV
+#       echo " "
+#       ~/Downloads/confluent-7.2.1/bin/kafka-avro-console-consumer \
+#       --topic $TOPIC_NAME \
+#       --bootstrap-server $confbootstrapServers \
+#       --consumer.config $HOME/.confluent/$KAFKA_ENV/java.config \
+#       --property schema.registry.url=$confschemaRegistry \
+#       --property basic.auth.credentials.source=USER_INFO \
+#       --property schema.registry.basic.auth.user.info=$confBasicAuth \
+#       --formatter io.confluent.kafka.formatter.AvroMessageFormatter | jq $3 --unbuffered
+#   fi
+# }
 
-function topics-confluent-read-end() {
+# function topics-msk-read-end() {
+#   getTopicNameAndEnv "msk" $1 $2
 
-  getTopicNameAndEnv "confluent" $1 $2
-  if [[ -z "$TOPIC_NAME" ]] || [[ -z "$KAFKA_ENV" ]]
-    then
-      echo topic: $TOPIC_NAME
-      echo environment: $KAFKA_ENV
-      echo 'both must be provided in order for the command to run'
-    else
-      echo " "
-      echo reading from topic: $TOPIC_NAME
-      echo in environment: $KAFKA_ENV
-      echo " "
-      ~/Downloads/confluent-7.2.1/bin/kafka-avro-console-consumer \
-      --topic $TOPIC_NAME \
-      --bootstrap-server $confbootstrapServers \
-      --consumer.config $HOME/.confluent/$KAFKA_ENV/java.config \
-      --property schema.registry.url=$confschemaRegistry \
-      --property basic.auth.credentials.source=USER_INFO \
-      --property schema.registry.basic.auth.user.info=$confBasicAuth \
-      --formatter io.confluent.kafka.formatter.AvroMessageFormatter | jq $3 --unbuffered
-  fi
-}
+#   if [[ -z "$TOPIC_NAME" ]] || [[ -z "$KAFKA_ENV" ]]
+#     then
+#       echo topic: $TOPIC_NAME
+#       echo environment: $KAFKA_ENV
+#       echo 'both must be provided in order for the command to run'
+#     else
+#       echo " "
+#       echo reading from topic: $TOPIC_NAME
+#       echo in environment: $KAFKA_ENV
+#       echo " "
+#       ~/Downloads/confluent-7.2.1/bin/kafka-avro-console-consumer \
+#       --topic $TOPIC_NAME \
+#       --bootstrap-server $bootstrapServers \
+#       --property schema.registry.url=$schemaRegistry \
+#       --formatter io.confluent.kafka.formatter.AvroMessageFormatter | jq $3 --unbuffered
+#   fi
+# }
 
-function topics-msk-read-end() {
-  getTopicNameAndEnv "msk" $1 $2
+# function getTopicName() {
+#   if [ -z "$2" ]
+#     then
+#       if [[ "$1" == *"msk"* ]];
+#         then
+#           export topicName=$(topics-msk-list) $KAFKA_ENV
+#         else
+#           export topicName=$(topics-confluent-list) $KAFKA_ENV
+#       fi
+#       if [ ! -z "$topicName" ]
+#         then
+#           export TOPIC_NAME=$topicName
+#       fi
+#     else
+#       export TOPIC_NAME=$2
+#   fi
+# }
 
-  if [[ -z "$TOPIC_NAME" ]] || [[ -z "$KAFKA_ENV" ]]
-    then
-      echo topic: $TOPIC_NAME
-      echo environment: $KAFKA_ENV
-      echo 'both must be provided in order for the command to run'
-    else
-      echo " "
-      echo reading from topic: $TOPIC_NAME
-      echo in environment: $KAFKA_ENV
-      echo " "
-      ~/Downloads/confluent-7.2.1/bin/kafka-avro-console-consumer \
-      --topic $TOPIC_NAME \
-      --bootstrap-server $bootstrapServers \
-      --property schema.registry.url=$schemaRegistry \
-      --formatter io.confluent.kafka.formatter.AvroMessageFormatter | jq $3 --unbuffered
-  fi
-}
+# function getEnv() {
+#   if [ -z "$1" ]
+#     then
+#       export kafkaEnv=$(list-envs)
+#       if [ ! -z "$kafkaEnv" ]
+#         then
+#           export KAFKA_ENV=$kafkaEnv
+#       fi
+#     else
+#       export KAFKA_ENV=$1
+#   fi
 
-function getTopicName() {
-  if [ -z "$2" ]
-    then
-      if [[ "$1" == *"msk"* ]];
-        then
-          export topicName=$(topics-msk-list) $KAFKA_ENV
-        else
-          export topicName=$(topics-confluent-list) $KAFKA_ENV
-      fi
-      if [ ! -z "$topicName" ]
-        then
-          export TOPIC_NAME=$topicName
-      fi
-    else
-      export TOPIC_NAME=$2
-  fi
-}
+#   echo "KAFKA_ENV" $KAFKA_ENV
 
-function getEnv() {
-  if [ -z "$1" ]
-    then
-      export kafkaEnv=$(list-envs)
-      if [ ! -z "$kafkaEnv" ]
-        then
-          export KAFKA_ENV=$kafkaEnv
-      fi
-    else
-      export KAFKA_ENV=$1
-  fi
+#   if [[ "$kafkaEnv" == *"dev"* ]] || [[ "$KAFKA_ENV" == *"dev"* ]];
+#     then
+#       export bootstrapServers=$DEV_MSK_BROKERS
+#       export confbootstrapServers=$DEV_CONFLUENT_BROKERS
+#       export schemaRegistry=$DEV_MSK_SCHEMA_REGISTRY
+#       export confschemaRegistry=$DEV_CONFLUENT_SCHEMA_REGISTRY
+#       export confBasicAuth=$DEV_CONFLUENT_BASIC_AUTH_TOKEN
+#       export KAFKA_ENV=dev
+#       export MYZK=$DEV_ZOOKEEPERS
+#   fi
+#   if [[ "$kafkaEnv" == *"qa"* ]] || [[ "$KAFKA_ENV" == *"qa"* ]];
+#     then
+#       export bootstrapServers=$QA_MSK_BROKERS
+#       export confbootstrapServers=$QA_CONFLUENT_BROKERS
+#       export schemaRegistry=$QA_MSK_SCHEMA_REGISTRY
+#       export confschemaRegistry=$QA_CONFLUENT_SCHEMA_REGISTRY
+#       export confBasicAuth=$QA_CONFLUENT_BASIC_AUTH_TOKEN
+#       export KAFKA_ENV=qa
+#       export MYZK=$QA_ZOOKEEPERS
+#   fi
+#   if [[ "$kafkaEnv" == *"qa1"* ]] || [[ "$KAFKA_ENV" == *"qa1"* ]];
+#     then
+#       export bootstrapServers=$QA1_MSK_BROKERS
+#       export confbootstrapServers=$QA1_CONFLUENT_BROKERS
+#       export schemaRegistry=$QA1_MSK_SCHEMA_REGISTRY
+#       export confschemaRegistry=$QA1_CONFLUENT_SCHEMA_REGISTRY
+#       export confBasicAuth=$QA1_CONFLUENT_BASIC_AUTH_TOKEN
+#       export KAFKA_ENV=qa1
+#       export MYZK=$QA1_ZOOKEEPERS
+#   fi
+#   if [[ "$kafkaEnv" == *"uat"* ]] || [[ "$KAFKA_ENV" == *"uat"* ]];
+#     then
+#       export bootstrapServers=$UAT_MSK_BROKERS
+#       export confbootstrapServers=$UAT_CONFLUENT_BROKERS
+#       export schemaRegistry=$UAT_MSK_SCHEMA_REGISTRY
+#       export confschemaRegistry=$UAT_CONFLUENT_SCHEMA_REGISTRY
+#       export confBasicAuth=$UAT_CONFLUENT_BASIC_AUTH_TOKEN
+#       export KAFKA_ENV=uat
+#       export MYZK=$UAT_ZOOKEEPERS
+#   fi
+#   if [[ "$kafkaEnv" == *"stage"* ]] || [[ "$KAFKA_ENV" == *"stage"* ]];
+#     then
+#       export bootstrapServers=$STAGE_MSK_BROKERS
+#       export confbootstrapServers=$STAGE_CONFLUENT_BROKERS
+#       export schemaRegistry=$STAGE_MSK_SCHEMA_REGISTRY
+#       export confschemaRegistry=$STAGE_CONFLUENT_SCHEMA_REGISTRY
+#       export confBasicAuth=$STAGE_CONFLUENT_BASIC_AUTH_TOKEN
+#       export KAFKA_ENV=stage
+#       export MYZK=$STAGE_ZOOKEEPERS
+#   fi
+# }
 
-  echo "KAFKA_ENV" $KAFKA_ENV
-
-  if [[ "$kafkaEnv" == *"dev"* ]] || [[ "$KAFKA_ENV" == *"dev"* ]];
-    then
-      export bootstrapServers=$DEV_MSK_BROKERS
-      export confbootstrapServers=$DEV_CONFLUENT_BROKERS
-      export schemaRegistry=$DEV_MSK_SCHEMA_REGISTRY
-      export confschemaRegistry=$DEV_CONFLUENT_SCHEMA_REGISTRY
-      export confBasicAuth=$DEV_CONFLUENT_BASIC_AUTH_TOKEN
-      export KAFKA_ENV=dev
-      export MYZK=$DEV_ZOOKEEPERS
-  fi
-  if [[ "$kafkaEnv" == *"qa"* ]] || [[ "$KAFKA_ENV" == *"qa"* ]];
-    then
-      export bootstrapServers=$QA_MSK_BROKERS
-      export confbootstrapServers=$QA_CONFLUENT_BROKERS
-      export schemaRegistry=$QA_MSK_SCHEMA_REGISTRY
-      export confschemaRegistry=$QA_CONFLUENT_SCHEMA_REGISTRY
-      export confBasicAuth=$QA_CONFLUENT_BASIC_AUTH_TOKEN
-      export KAFKA_ENV=qa
-      export MYZK=$QA_ZOOKEEPERS
-  fi
-  if [[ "$kafkaEnv" == *"qa1"* ]] || [[ "$KAFKA_ENV" == *"qa1"* ]];
-    then
-      export bootstrapServers=$QA1_MSK_BROKERS
-      export confbootstrapServers=$QA1_CONFLUENT_BROKERS
-      export schemaRegistry=$QA1_MSK_SCHEMA_REGISTRY
-      export confschemaRegistry=$QA1_CONFLUENT_SCHEMA_REGISTRY
-      export confBasicAuth=$QA1_CONFLUENT_BASIC_AUTH_TOKEN
-      export KAFKA_ENV=qa1
-      export MYZK=$QA1_ZOOKEEPERS
-  fi
-  if [[ "$kafkaEnv" == *"uat"* ]] || [[ "$KAFKA_ENV" == *"uat"* ]];
-    then
-      export bootstrapServers=$UAT_MSK_BROKERS
-      export confbootstrapServers=$UAT_CONFLUENT_BROKERS
-      export schemaRegistry=$UAT_MSK_SCHEMA_REGISTRY
-      export confschemaRegistry=$UAT_CONFLUENT_SCHEMA_REGISTRY
-      export confBasicAuth=$UAT_CONFLUENT_BASIC_AUTH_TOKEN
-      export KAFKA_ENV=uat
-      export MYZK=$UAT_ZOOKEEPERS
-  fi
-  if [[ "$kafkaEnv" == *"stage"* ]] || [[ "$KAFKA_ENV" == *"stage"* ]];
-    then
-      export bootstrapServers=$STAGE_MSK_BROKERS
-      export confbootstrapServers=$STAGE_CONFLUENT_BROKERS
-      export schemaRegistry=$STAGE_MSK_SCHEMA_REGISTRY
-      export confschemaRegistry=$STAGE_CONFLUENT_SCHEMA_REGISTRY
-      export confBasicAuth=$STAGE_CONFLUENT_BASIC_AUTH_TOKEN
-      export KAFKA_ENV=stage
-      export MYZK=$STAGE_ZOOKEEPERS
-  fi
-}
-
-function getTopicNameAndEnv() {
-  getEnv $2
-  getTopicName $1 $3
-}
+# function getTopicNameAndEnv() {
+#   getEnv $2
+#   getTopicName $1 $3
+# }
