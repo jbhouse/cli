@@ -1,0 +1,42 @@
+#!/bin/bash
+
+function k-describe() {
+    ENV_NAME=$(genv)
+    NAMESPACE=$(getNamespace)
+    RESOURCE=$(kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME get $1 | fzf | awk '{ print $1 }')
+    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME describe $1 $RESOURCE
+}
+
+function k-logs() {
+    ENV_NAME=$(genv)
+    NAMESPACE=$(getNamespace)
+    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME logs -f $(gpo)
+}
+
+function k-scale() {
+    ENV_NAME=$(genv)
+    NAMESPACE=$(getNamespace)
+    DEPLOY_NAME=$(kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME get deployments | fzf | awk '{ print $1 }')
+    echo "Scaling deployment ${DEPLOY_NAME} in environment ${ENV_NAME}"
+    echo "How many replicas would you like to scale to?"
+    read replicacount
+    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME scale --replicas=$replicacount deployment/$DEPLOY_NAME
+}
+
+function gpo() {
+    kubectl -n $(getNamespace) --kubeconfig=~/.kube/$ENV_NAME get po | fzf | awk '{ print $1 }'
+}
+
+function getNamespace() {
+    ENV_NAME=$(genv)
+    if [ $ENV_NAME == "dev" ]
+        then NAMESPACE=mdpo-dev
+    fi
+    if [[ $ENV_NAME == "uat" ]] || [[$ENV_NAME == "qa"]]
+        then NAMESPACE=mdpo
+    fi
+}
+
+function genv() {
+    cat ~/.kube/config | grep server | sed 's/^[[:space:]]*//g' | sed -n '/:/s/server\: https\:\/\/api.//p' | sed 's/[-k8s].*$//'
+}

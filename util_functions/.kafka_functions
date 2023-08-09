@@ -1,10 +1,19 @@
 #!/bin/bash
 
-function getTopicName() {
+function publishKafkaMessage() {
   source ~/.zsh_env
   TOPIC_NAME=$(cat ~/.zsh_local/kafka_map.json | jq | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//')
-  # jq -rc . ~/Documents/kafka_messages/$TOPIC_NAME.json | kafka-console-producer --broker-list kafka-$1-it-mdpo-mobile-1.it-mdpo-mobile.spectrum.net:9092,kafka-$1-it-mdpo-mobile-2.it-mdpo-mobile.spectrum.net:9092,kafka-$1-it-mdpo-mobile-3.it-mdpo-mobile.spectrum.net:9092 --topic $TOPIC_NAME
   jq -rc . ~/Documents/kafka_messages/$TOPIC_NAME.json | kafka-console-producer --broker-list $BOOTSTRAP_SERVER --topic $TOPIC_NAME
+}
+
+function consumeKafkaMessage() {
+  source ~/.zsh_env
+  TOPIC_NAME=$(cat ~/.zsh_local/kafka_map.json | jq | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//')
+  consume $TOPIC_NAME
+}
+
+function consume() {
+    kafka-console-consumer --topic $1 --bootstrap-server $BOOTSTRAP_SERVER
 }
 
 # todo
