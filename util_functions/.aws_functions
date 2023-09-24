@@ -38,7 +38,7 @@ function ec2-describe() {
 }
 
 function open-proxy() {
-    ssh -i ~/.ssh/awsProxy.pem ubuntu@$1
+    ssh -i ~/.ssh/pubkey.pem ubuntu@$*
 }
 
 # function ec2-describe() {
