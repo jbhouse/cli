@@ -120,3 +120,4 @@ echo "installing fzf-tab. may still be broken on most recent release"
 echo "may need to undo commits from main. Do so at ~/.oh-my-zsh/custom/plugins/fzf-tab"
 echo '----------------------------'
 git clone https://github.com/Aloxaf/fzf-tab ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/fzf-tab
+# git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm

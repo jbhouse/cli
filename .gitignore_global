@@ -167,6 +167,7 @@ out/
 *.ipr
 *.iws
 .run/
+htmlReport
 
 ##############################
 ## Eclipse

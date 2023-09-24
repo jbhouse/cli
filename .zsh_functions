@@ -2,7 +2,7 @@
 # to replace first instance of *pattern*
 # | sed -n 's/pattern//p'
 # get everything after the first instance of the pattern
-# | sed -n '/:/s/pattern//p'
+# | sed -n '/:/s/[pattern]//p'
 # to remove everything after pattern
 # | sed 's/[pattern].*$//'
 # s/          : substitute
@@ -51,6 +51,9 @@ function dockr() { yes | docker volume prune && docker compose up --force-recrea
 function docku() { yes | docker volume prune && docker compose up -d ;}
 
 # git functions
+function rclone() {
+  (cd ~/repos && git clone "$1")
+}
 function gitr() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -78,7 +81,7 @@ function gsds() {
 function gac() { git add -i ; BRANCH=$(branch) ; git commit -m "${BRANCH} : $*" ;}
 function gacp() {
   BRANCH=$(branch)
-  if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]];
+  if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]] || [[ "${BRANCH}" == *"develop"* ]];
     then echo "are you sure you want to push to ${BRANCH}? y/n" ; read answer ;
     if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]]
       then git add . ; git commit -m "${BRANCH} : $*" ; git push ;
