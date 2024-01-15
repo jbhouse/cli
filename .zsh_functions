@@ -14,21 +14,12 @@
 function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
 # function reports() { cmd.exe /c start microsoft-edge:$PWD/app/build/reports ;}
 
-function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*└── //' ;}
-
-function pipelines() {
-    if [ $# -eq 0 ];
-        then sh ~/Documents/cli/links/pipelines/$(ls ~/Documents/cli/links/pipelines | fzf);
-        else sh ~/Documents/cli/links/pipelines/$1.sh
-    fi
-}
-function crl() { sh ~/Documents/cli/curl/$(ls ~/Documents/cli/curl | fzf) $1 ;}
 function cc() { $* | $CLIPBOARD }
 function cpl() { fc -ln -1 | $CLIPBOARD }
 
 # maven functions
 function mist() { mvn -T 1C install $1 -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
-function mid() { mvn -pl $* -amd clean install ;}
+function mim() { mvn -pl $(ls -d */ | fzf) -amd clean install ;}
 
 # tmux functions
 function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
@@ -39,12 +30,14 @@ function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:
 function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
 
 # Docker functions
-function dockk() { # double check | grep -v k8s |
+# At Clover I used to have docker container ls | grep -v k8s 
+# I think that was due to kubernetes, but the specifics are fuzzy
+function dockk() {
   yes | docker volume prune
-  idx=0
-  for i in $(docker container ls | grep -v k8s | awk '{print $1}'); do
-    ((idx >= 1)) && echo "$i" is being deleted && docker stop "$i" 1> /dev/null && docker rm "$i" 1> /dev/null;
-    ((idx++))
+  for i in $(docker container ls | fzf -m | awk '{print $1}'); do
+    echo $(docker container ls | grep $i | awk '{print $2}') is being deleted
+    docker stop "$i" 1> /dev/null
+    docker rm "$i" 1> /dev/null;
   done
 }
 function dockr() { yes | docker volume prune && docker compose up --force-recreate -d ;}
@@ -77,7 +70,6 @@ function gsds() {
     else echo 'no stashes select or dropped'
   fi
 }
-#function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gac() { git add -i ; BRANCH=$(branch) ; git commit -m "${BRANCH} : $*" ;}
 function gacp() {
   BRANCH=$(branch)
@@ -110,12 +102,12 @@ function gcob () {
 }
 
 # editor functions
-function ij() { (cd ~/repos && idea $(ls | fzf)) ;}
-function io() { (cd ~/tmp && idea $(ls | fzf)) ;}
+function ij() { (cd ~/repos && idea $(ls | fzf));}
+function io() { (cd ~/tmp && idea $(ls | fzf));}
 
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
-function functions() { cat ~/.zsh_functions | grep function ;}
+function functions() { cat ~/.zsh_functions | grep function ;} # iterate over local functions and print them as well
 function aliases() { cat ~/.zsh_aliases | grep alias ;}
 function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
 # improve this to filter out previous usages of hist
