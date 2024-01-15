@@ -14,8 +14,8 @@
 function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
 # function reports() { cmd.exe /c start microsoft-edge:$PWD/app/build/reports ;}
 
-function cc() { $* | $CLIPBOARD }
-function cpl() { fc -ln -1 | $CLIPBOARD }
+function cc() { $* | $CLIPBOARD ;}
+function cpl() { fc -ln -1 | $CLIPBOARD ;}
 
 # maven functions
 function mist() { mvn -T 1C install $1 -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
@@ -44,9 +44,7 @@ function dockr() { yes | docker volume prune && docker compose up --force-recrea
 function docku() { yes | docker volume prune && docker compose up -d ;}
 
 # git functions
-function rclone() {
-  (cd ~/repos && git clone "$1")
-}
+function rclone() {(cd ~/repos && git clone "$1")}
 function gitr() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -62,14 +60,7 @@ function gitu() {
   fi
 }
 function gsa() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
-function gsds() {
-  STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
-  echo $STASHES
-  if [ ! -z "$STASHES" ]
-    then for i in $(printf %b $STASHES); do git stash drop $i; done
-    else echo 'no stashes select or dropped'
-  fi
-}
+function gsd() { git stash drop $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
 function gac() { git add -i ; BRANCH=$(branch) ; git commit -m "${BRANCH} : $*" ;}
 function gacp() {
   BRANCH=$(branch)
@@ -83,22 +74,20 @@ function gacp() {
   fi
 }
 function gcob () {
-    git pull
-    if [[ `git status --porcelain` ]];
-      then
-        git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
-        if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
-          then git stash
-          else echo commit message: ; read message ; git commit . -m "$(branch) : $message"
-        fi
-        git pull
-    else
-        if [ -z "$1" ]
-          then git checkout $(branches)
-          else git checkout $1
-        fi
-        git pull
+  git pull
+  if [[ `git status --porcelain` ]];
+    then
+      git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
+      if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
+        then git stash
+        else echo commit message: ; read message ; git commit . -m "$(branch) : $message"
+      fi
     fi
+    if [ -z "$1" ]
+      then git checkout $(branches)
+      else git checkout $1
+    fi
+    git pull
 }
 
 # editor functions
@@ -107,7 +96,7 @@ function io() { (cd ~/tmp && idea $(ls | fzf));}
 
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
-function functions() { cat ~/.zsh_functions | grep function ;} # iterate over local functions and print them as well
+function functions() { cat ~/.zsh_functions ~/.zsh_local/.* | grep function ;}
 function aliases() { cat ~/.zsh_aliases | grep alias ;}
 function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
 # improve this to filter out previous usages of hist
