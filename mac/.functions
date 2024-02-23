@@ -7,3 +7,4 @@ function updateEnvFile() {
 }
 function hub() { open -a "Google Chrome" $(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p') ;}
 # function reports() { open -a "Google Chrome" $PWD/app/build/reports }
+function searchForNewVideos() { node ~/repos/automatedBrowsing/searchForNewVideos.js $(cat ~/repos/automatedBrowsing/searchForNewVideos.json | grep channelName | sed 's/:/ /' | awk '{print $2}' | fzf -m | sed -n 's/,//p' | sed -n 's/"//p' | sed -n 's/"//p') ;}

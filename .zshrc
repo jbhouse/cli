@@ -68,3 +68,7 @@ HISTFILE=~/.zsh_history
 HISTSIZE=1000
 SAVEHIST=1000
 setopt appendhistory
+
+#export FZF_TMUX=1
+#export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
+source /opt/homebrew/Cellar/fzf/0.46.1/shell/key-bindings.zsh

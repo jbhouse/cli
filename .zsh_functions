@@ -59,18 +59,18 @@ function gitu() {
     else echo 'no files selected, no changes made'
   fi
 }
-function gsa() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
-function gsd() { git stash drop $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
-function gac() { git add -i ; BRANCH=$(branch) ; git commit -m "${BRANCH} : $*" ;}
+function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function gitStashDelete() { git stash drop $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function gac() { git add . ; git commit -m $(branch)" : $*" ;}
 function gacp() {
   BRANCH=$(branch)
   if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]] || [[ "${BRANCH}" == *"develop"* ]];
     then echo "are you sure you want to push to ${BRANCH}? y/n" ; read answer ;
     if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]]
       then git add . ; git commit -m "${BRANCH} : $*" ; git push ;
-      else echo "commit/push aborted."
+      else echo "commit/push aborted." ;
     fi
-    else git add . ; git commit -m "${BRANCH} : $*" ; git push --set-upstream origin ${BRANCH} ;
+    else $(gac) ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
 function gcob () {
@@ -99,14 +99,6 @@ function mkd() { mkdir "$*" && cd "$*" ;}
 function functions() { cat ~/.zsh_functions ~/.zsh_local/.* | grep function ;}
 function aliases() { cat ~/.zsh_aliases | grep alias ;}
 function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
-# improve this to filter out previous usages of hist
-function hist() {
-  if [ ! -z "$1" ]
-    then num=$(history | sort -rn | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); 
-    else num=$(history | sort -rn | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); 
-  fi
-  eval $num;
-}
 
 # environment management functions
 function j8() { updateEnvFile 8 ;}
@@ -117,5 +109,5 @@ function backup() { (cd ~/Documents/cli && git add . && gacp $*) ;}
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
-function rgf() { rg --hidden $1 $2 -l | preview ;}
-function preview() { fzf --preview 'bat --style numbers,changes --color=always {}' ;}
+function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
+function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
