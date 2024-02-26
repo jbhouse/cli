@@ -23,37 +23,51 @@ function pipelines() {
     fi
 }
 function crl() { sh ~/Documents/cli/curl/$(ls ~/Documents/cli/curl | fzf) $1 ;}
-function cc() { $* | $CLIPBOARD }
-function cpl() { fc -ln -1 | $CLIPBOARD }
+function cc() { $* | $CLIPBOARD ;}
+function cpl() { fc -ln -1 | $CLIPBOARD ;}
 
 # maven functions
-function mist() { mvn -T 1C install $1 -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
+function mist() { mvn -T 1C clean install $* -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
 function mid() { mvn -pl $* -amd clean install ;}
 
 # tmux functions
-function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
+# function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
 function smux() { PROJECT=$(ls ~/.config/tmuxinator | sed 's/[.].*$//' | fzf) ; if [ ! -z "$PROJECT" ]; then tmuxinator start $PROJECT; fi ;}
-function mux() { if [ $# -eq 0 ]; then muxr ; else tmuxinator start $*; fi ;}
+function mux() { if [ $# -eq 0 ]; then smux ; else tmuxinator start $*; fi ;}
 function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
 function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
 function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
 
 # Docker functions
-function dockk() { # double check | grep -v k8s |
-  yes | docker volume prune
-  idx=0
-  for i in $(docker container ls | grep -v k8s | awk '{print $1}'); do
-    ((idx >= 1)) && echo "$i" is being deleted && docker stop "$i" 1> /dev/null && docker rm "$i" 1> /dev/null;
-    ((idx++))
+function docker-kill() {
+  for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
+    echo container $(docker ps -a | grep $i | awk '{print $2}') is being deleted
+    docker stop "$i" 1> /dev/null;
+    docker rm "$i" 1> /dev/null;
+  done
+  for i in $(docker image ls | fzf -m | awk '{print $1}'); do
+    echo image $(docker image ls | grep $i | awk '{print $2}') is being deleted
+    docker image rm "$i" 1> /dev/null;
   done
 }
-function dockr() { yes | docker volume prune && docker compose up --force-recreate -d ;}
-function docku() { yes | docker volume prune && docker compose up -d ;}
+function docker-stop() {
+  for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
+    echo container $(docker ps -a | grep $i | awk '{print $2}') is being stopped
+    docker stop "$i" 1> /dev/null;
+  done
+}
+function docker-start() {
+  for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
+    echo container $(docker ps -a | grep $i | awk '{print $2}') is being restarted
+    docker restart "$i" 1> /dev/null;
+  done
+}
+function docker-exec () {
+  docker exec -ti $(docker ps -a | fzf | awk '{print $1}') /bin/sh
+}
 
 # git functions
-function rclone() {
-  (cd ~/repos && git clone "$1")
-}
+function rclone() { (cd ~/repos && git clone "$1") ;}
 function gitr() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -131,6 +145,7 @@ function hist() {
 function j8() { updateEnvFile 8 ;}
 function j11() { updateEnvFile 11 ;}
 function j17() { updateEnvFile 17 ;}
+function j21() { updateEnvFile 21 ;}
 function backup() { (cd ~/Documents/cli && git add . && gacp $*) ;}
 
 # searching functions

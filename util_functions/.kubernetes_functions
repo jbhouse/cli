@@ -1,42 +1,54 @@
 #!/bin/bash
 
-function k-describe() {
-    ENV_NAME=$(genv)
-    NAMESPACE=$(getNamespace)
-    RESOURCE=$(kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME get $1 | fzf | awk '{ print $1 }')
-    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME describe $1 $RESOURCE
+function cube-describe() {
+    if [ ! -z "$1" ]
+        then RN=$1
+        else RN=$(printf "po\npl" | fzf)
+    fi
+    RESOURCE=$(cube get $RN | fzf | awk '{ print $1 }')
+    cube describe $RN $RESOURCE
 }
 
-function k-logs() {
-    ENV_NAME=$(genv)
-    NAMESPACE=$(getNamespace)
-    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME logs -f $(gpo)
+function cube-logs() { cube logs $* $(cube-get-pod) ;}
+
+function cube-configure() { if [ -z $KNS ] || [ -z $KCON ]; then senv ; fi ; }
+
+function cube() {
+    cube-configure
+    #echo "kubectl -n $KNS --kubeconfig=$KCON $*"
+    kubectl -n $KNS --kubeconfig=$KCON $*
 }
 
-function k-scale() {
-    ENV_NAME=$(genv)
-    NAMESPACE=$(getNamespace)
-    DEPLOY_NAME=$(kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME get deployments | fzf | awk '{ print $1 }')
-    echo "Scaling deployment ${DEPLOY_NAME} in environment ${ENV_NAME}"
+function cube-scale() {
+    DEPLOY_NAME=$(cube get deployments | fzf | awk '{ print $1 }')
+    echo "Scaling deployment ${DEPLOY_NAME}"
     echo "How many replicas would you like to scale to?"
     read replicacount
-    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME scale --replicas=$replicacount deployment/$DEPLOY_NAME
+    cube scale --replicas=$replicacount deployment/$DEPLOY_NAME
 }
 
-function gpo() {
-    kubectl -n $(getNamespace) --kubeconfig=~/.kube/$ENV_NAME get po | fzf | awk '{ print $1 }'
+function cube-exec() { cube exec $(cube-get-pod) -- $* ;}
+
+function cube-terminal() { cube exec $(cube-get-pod) -it -- bash ;}
+
+function cube-all-pods() {
+    if [ ! -z "$1" ]
+        then cube get po | awk '{ print $1 }' | grep $1
+        else cube get po | awk '{ print $1 }'
+    fi
 }
 
-function getNamespace() {
-    ENV_NAME=$(genv)
+function cube-get-pod() { cube get po | awk '{ print $1 }' | fzf ;}
+
+function senv() {
+    if [ ! -z "$1" ]
+        then ENV_NAME=$1
+        else ENV_NAME=$(printf "dev\nuat\nqa" | fzf)
+    fi
+    #KUBE_NS=$(cat ~/.kube/config | grep server | sed 's/^[[:space:]]*//g' | sed -n '/:/s/server\: https\:\/\/api.//p' | sed 's/[-k8s].*$//')
     if [ $ENV_NAME == "dev" ]
-        then NAMESPACE=mdpo-dev
+        then KNS="mdpo-dev"
+        else KNS="mdpo"
     fi
-    if [[ $ENV_NAME == "uat" ]] || [[$ENV_NAME == "qa"]]
-        then NAMESPACE=mdpo
-    fi
-}
-
-function genv() {
-    cat ~/.kube/config | grep server | sed 's/^[[:space:]]*//g' | sed -n '/:/s/server\: https\:\/\/api.//p' | sed 's/[-k8s].*$//'
+    KCON=~/.kube/$ENV_NAME
 }

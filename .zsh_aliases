@@ -72,6 +72,7 @@ alias c='clear'
 alias h='history'
 alias home='cd ~'
 alias ex="/mnt/c/Windows/explorer.exe"
+# add this to zsh env
 alias ll='ls -alF'
 alias l='ls -CF'
 alias lsg='ls | grep'
