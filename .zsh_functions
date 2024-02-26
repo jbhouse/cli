@@ -39,30 +39,30 @@ function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:
 function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
 
 # Docker functions
-function docker-kill() {
+function dkill() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being deleted
     docker stop "$i" 1> /dev/null;
     docker rm "$i" 1> /dev/null;
   done
-  for i in $(docker image ls | fzf -m | awk '{print $1}'); do
-    echo image $(docker image ls | grep $i | awk '{print $2}') is being deleted
-    docker image rm "$i" 1> /dev/null;
+  for i in $(docker image ls | fzf -m | awk '{print $3}'); do
+    echo image $(docker image ls | grep $i | awk '{print $1}') is being deleted
+    docker image rm "$i" -f 1> /dev/null;
   done
 }
-function docker-stop() {
+function dstop() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being stopped
     docker stop "$i" 1> /dev/null;
   done
 }
-function docker-start() {
+function dstart() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being restarted
     docker restart "$i" 1> /dev/null;
   done
 }
-function docker-exec () {
+function dexec () {
   docker exec -ti $(docker ps -a | fzf | awk '{print $1}') /bin/sh
 }
 
