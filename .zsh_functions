@@ -12,8 +12,6 @@
 # /\1/        : and replace with the first backslash-bracketed expression you found
 
 function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
-# function reports() { cmd.exe /c start microsoft-edge:$PWD/app/build/reports ;}
-
 function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*└── //' ;}
 
 function pipelines() {
@@ -27,8 +25,8 @@ function cc() { $* | $CLIPBOARD ;}
 function cpl() { fc -ln -1 | $CLIPBOARD ;}
 
 # maven functions
-function mist() { mvn -T 1C clean install $* -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
-function mid() { mvn -pl $* -amd clean install ;}
+function mist() { mvn -T 1C clean install "$@" -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
+function mid() { mvn -pl "$@" -amd clean install ;}
 
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
@@ -38,90 +36,131 @@ function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
 function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
 function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
 
-# Docker functions
-function dkill() {
-  for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container $(docker ps -a | grep $i | awk '{print $2}') is being deleted
-    docker stop "$i" 1> /dev/null;
-    docker rm "$i" 1> /dev/null;
-  done
-  for i in $(docker image ls | fzf -m | awk '{print $3}'); do
-    echo image $(docker image ls | grep $i | awk '{print $1}') is being deleted
-    docker image rm "$i" -f 1> /dev/null;
-  done
+function containers() {
+  docker ps -a | fzf \
+    --bind "ctrl-o:execute:${EDITOR:-vim} <(docker container logs {1}) > /dev/tty" \
+    --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
+    --bind "ctrl-x:execute:docker start {1} > /dev/null" \
+    --bind "ctrl-d:execute:docker rm {1} -v > /dev/null;" \
+    --bind "ctrl-p:execute:docker container prune -f > /dev/null" \
+    --bind "ctrl-r:reload:docker ps -a" \
+    --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
+    --info=inline --layout=reverse --header-lines=1 \
+    --preview-window 'up,70%,border-bottom,+{2}+3/3,~3' \
+    --preview "docker container logs {1}" \
+    --prompt "containers >" \
+    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container and anonymous volumes) | CTRL-P (prune networks) | CTRL-R (reload) | ENTER (exec into container)\n'
 }
-function dstop() {
+
+function networks() {
+  docker network ls | fzf \
+    --bind "ctrl-d:execute:docker network rm {1} > /dev/null" \
+    --bind "ctrl-p:execute:docker network prune -f > /dev/null" \
+    --bind "ctrl-r:reload:docker network ls" \
+    --info=inline --layout=reverse --header-lines=1 \
+    --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+    --preview 'docker network inspect -f json {1} | jq ".[].Containers"' \
+    --prompt "networks >" \
+    --header $'CTRL-D (delete network) | CTRL-P (prune networks) | CTRL-R (reload)\n'
+}
+
+function images() {
+  docker image ls | fzf \
+    --bind "ctrl-d:execute:docker image rm {1} > /dev/null;" \
+    --bind "ctrl-p:execute:docker image prune -f > /dev/null" \
+    --bind "ctrl-r:reload:docker image ls" \
+    --info=inline --layout=reverse --header-lines=1 \
+    --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+    --preview "echo "Env:" && docker image inspect {1} | jq '.[].Config.Env' && echo "WorkingDir:" && docker image inspect {1} | jq '.[].Config.WorkingDir' && echo "Entrypoint:" && docker image inspect {1} | jq '.[].Config.Entrypoint'" \
+    --prompt "images >" \
+    --header $'CTRL-S (stop all containers using image) | CTRL-D (delete image) | CTRL-P (prune images) | CTRL-R (reload)\n'
+}
+
+function stopContainersUsingImage() {
+  for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;
+}
+
+function docker-container-stop() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being stopped
     docker stop "$i" 1> /dev/null;
   done
 }
-function dstart() {
+function docker-container-start() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being restarted
     docker restart "$i" 1> /dev/null;
   done
 }
-function dexec () {
+function docker-container-terminal () {
   docker exec -ti $(docker ps -a | fzf | awk '{print $1}') /bin/sh
 }
+function docker-container-exec () {
+  docker exec $(docker ps -a | fzf | awk '{print $1}') $*
+}
 
-# git functions
+# git functions (need to handle ??)
 function rclone() { (cd ~/repos && git clone "$1") ;}
-function gitr() {
+function git-file-revert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
-    then for i in $(printf %b $FILE); do git checkout $i; done
+    then for i in $(printf %b "$FILE"); do git checkout "$i"; done
     else echo 'no files selected, no changes made'
   fi
 }
-function gitu() {
+function git-file-unstage() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
     then for i in $(printf %b $FILE); do git restore --staged $i; done
     else echo 'no files selected, no changes made'
   fi
 }
-function gsa() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
-function gsds() {
+function git-stash-apply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function git-stash-delete-stash() {
   STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
-  echo $STASHES
-  if [ ! -z "$STASHES" ]
-    then for i in $(printf %b $STASHES); do git stash drop $i; done
-    else echo 'no stashes select or dropped'
+  echo "$STASHES"
+  if [ ! -z "$STASHES" ];
+    then for i in $(printf %b "$STASHES"); do git stash drop "$i"; done;
+    else echo 'no stashes select or dropped';
   fi
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
-function gac() { git add -i ; BRANCH=$(branch) ; git commit -m "${BRANCH} : $*" ;}
-function gacp() {
-  BRANCH=$(branch)
+function git-add-commit() { git add -i ; BRANCH=$(git-branch) ; git commit . -m "${BRANCH} : $*" ;}
+function git-add-commit-push() {
+  BRANCH=$(git-branch);
   if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]] || [[ "${BRANCH}" == *"develop"* ]];
     then echo "are you sure you want to push to ${BRANCH}? y/n" ; read answer ;
-    if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]]
+    if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]];
       then git add . ; git commit -m "${BRANCH} : $*" ; git push ;
-      else echo "commit/push aborted."
+      else echo "commit/push aborted.";
     fi
     else git add . ; git commit -m "${BRANCH} : $*" ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
-function gcob () {
+function git-branch-checkout () {
+  git fetch --prune
     git pull
     if [[ `git status --porcelain` ]];
       then
         git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
         if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
           then git stash
-          else echo commit message: ; read message ; git commit . -m "$(branch) : $message"
+          else echo commit message: ; read message ; git commit . -m "$(git-branch) : $message"
         fi
         git pull
     else
         if [ -z "$1" ]
-          then git checkout $(branches)
+          then git checkout $(git branch -r | sed "s|origin/||" | fzf)
           else git checkout $1
         fi
         git pull
     fi
 }
+
+function git-branch-delete() { git branch -D $*; }
+function git-branch() { git branch --show-current; }
+function git-branch-copy() { git branch --show-current | $CLIPBOARD; }
+function git-branch-create() { git checkout -b $*; }
 
 # editor functions
 function ij() { (cd ~/repos && idea $(ls | fzf)) ;}
@@ -146,7 +185,7 @@ function j8() { updateEnvFile 8 ;}
 function j11() { updateEnvFile 11 ;}
 function j17() { updateEnvFile 17 ;}
 function j21() { updateEnvFile 21 ;}
-function backup() { (cd ~/Documents/cli && git add . && gacp $*) ;}
+function backup() { (cd ~/Documents/cli && git add . && git-add-commit-push $*) ;}
 
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}

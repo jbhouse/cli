@@ -1,4 +1,4 @@
-name: mux
+name: dockr
 root: ~/
 
 windows:
@@ -8,9 +8,6 @@ windows:
       # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
       # synchronize: after
       panes:
-        - micro ~/.config/tmuxinator/mux.yml
-        - micro ~/.config/tmuxinator/zsh.yml
-        - micro ~/.config/tmuxinator/micro.yml
-        - micro ~/.config/tmuxinator/proxy.yml
-        - micro ~/.config/tmuxinator/ssh.yml
-        - micro ~/.config/tmuxinator/dockr.yml
+        - images
+        - networks
+        - containers

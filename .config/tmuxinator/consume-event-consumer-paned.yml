@@ -1,0 +1,16 @@
+name: consume-event-consumer-paned
+root: ~/
+
+windows:
+
+  - topics:
+      layout: tiled
+      panes:
+        - consume speedboost-cms-device-connect --group cli
+        - consume speedboost-scp-modify --group cli
+        # - consume speedboost-scp-tethering --group cli
+        - consume speedboost-scp-device-connect --group cli
+        - consume speedboost-pcmm-modify --group cli
+        - consume speedboost-pcmm-modify --group cli
+        - consume effie-mobileaccountdeact-teardown --group cli
+        # - consume speedboost-effie-hsddeact-teardown --group cli

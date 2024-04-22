@@ -1,0 +1,56 @@
+name: consumer-scp-device-connected-windowed
+root: ~/
+
+windows:
+
+  - ingestinator:
+      layout: tiled
+      panes:
+        - consume scp-device-connection-events-and-responses --group cli
+
+  - event-consumer:
+      layout: tiled
+      panes:
+        - consume mdpo-spectrum-mobile-scp-device-connect-event --group cli
+
+  - assemble-context-data:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-device-connect --group cli
+
+  - context-resolver:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-device-connect-assemble-context-data --group cli
+
+  - policy-evaluator:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-device-connect-mdpo-context-resolver --group cli
+
+  - get-eligibility:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-device-connect-mdpo-policy-evaluator --group cli
+
+  - execution-engine:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-device-connect-mdpo-get-eligibility-from-policy-result --group cli
+
+  - state-persistence-to-extractinator:
+      layout: tiled
+      panes:
+        - consume mdpo-state-persist-to-extractinator-msgs --group cli
+
+  # - state-writer:
+  #     layout: tiled
+  #     panes:
+  #       - consume mdpo-state-writer-source --group cli
+
+  # - activity-writer:
+  #     layout: tiled
+  #     panes:
+  #       - consume mdpo-activity-writer-source --group cli
+  
+  # these two are environment specific and will require params to be passed

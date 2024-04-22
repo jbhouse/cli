@@ -1,0 +1,18 @@
+name: consumer-cms-device-connected-paned
+root: ~/
+
+windows:
+
+  - ingestinator:
+      layout: tiled
+      panes:
+        - consume connection-manager-events-and-responses --group cli
+        - consume mdpo-spectrum-mobile-connection-event --group cli
+        - consume speedboost-cms-device-connect --group cli
+        - consume assemble-context-data --group cli
+        - consume mdpo-context-resolver --group cli
+        - consume mdpo-policy-evaluator --group cli
+        - consume mdpo-get-eligibility-from-policy-result --group cli
+        - consume mdpo-state-persist-to-extractinator-msgs --group cli
+        # - consume mdpo-state-writer-source --group cli
+        # - consume mdpo-activity-writer-source --group cli

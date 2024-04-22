@@ -10,3 +10,18 @@ function updateEnvFile() { gsed -i "/JAVA_HOME=/c export JAVA_HOME=/opt/homebrew
 function hub() { open -a "Google Chrome" $(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p') ;}
 
 EOF
+
+function idk() {
+  while getopts 'abf:v' flag; do
+    case "${flag}" in
+      a) a_flag='true' ;;
+      b) b_flag='true' ;;
+      f) files="${OPTARG}" ;;
+      v) verbose='true' ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+}
+Note: If a character is followed by a colon (e.g. f:), that option is expected to have an argument.
+./script -v -a -b -f filename

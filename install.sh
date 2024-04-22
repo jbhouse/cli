@@ -27,7 +27,7 @@ if [[ "$distro" == *"W"* ]] || [[ "$distro" == *"w"* ]];
     PACKAGE_MANAGER='sudo apt'
 fi
 
-ln -s $(pwd)/$OS_NAME/.env_vars ~/.zsh_local/.env_vars
+# ln -s $(pwd)/$OS_NAME/.env_vars ~/.zsh_local/.env_vars
 ln -s $(pwd)/$OS_NAME/.functions ~/.zsh_local/.functions
 if [ -f $(pwd)/$OS_NAME/.aliases ]
   then ln -s $(pwd)/$OS_NAME/.aliases ~/.zsh_local/.aliases

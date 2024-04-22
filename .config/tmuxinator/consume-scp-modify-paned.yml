@@ -1,0 +1,16 @@
+name: consumer-scp-modify-paned
+root: ~/
+
+windows:
+
+  - topics:
+      layout: tiled
+      panes:
+        - echo "\ningestinator" && consume plume-hybrid-events-and-responses --group cli
+        - echo "\nevent consumer" &&  consume mdpo-spectrum-mobile-scp-events --group cli
+        - echo "\nassemble context data" &&  consume speedboost-scp-modify --group cli
+        - echo "\ncontext resolver" &&  consume speedboost-scp-modify-assemble-context-data --group cli
+        - echo "\nexecution engine" &&  consume speedboost-scp-modify-mdpo-context-resolver --group cli
+        - echo "\nstate persistence to extractinator" &&  consume mdpo-state-persist-to-extractinator-msgs --group cli
+        # - echo "\nstate persistence to state writer" &&  consume mdpo-state-writer-source --group cli
+        # - echo "\nstate persistence to activity writer" &&  consume mdpo-activity-writer-source --group cli

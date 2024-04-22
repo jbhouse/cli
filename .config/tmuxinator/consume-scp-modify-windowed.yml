@@ -1,0 +1,44 @@
+name: consumer-scp-modify-windowed
+root: ~/
+
+windows:
+
+  - ingestinator:
+      layout: tiled
+      panes:
+        - consume plume-hybrid-events-and-responses --group cli
+
+  - event-consumer:
+      layout: tiled
+      panes:
+        - consume mdpo-spectrum-mobile-scp-events --group cli
+
+  - assemble-context-data:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-modify --group cli
+
+  - context-resolver:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-modify-assemble-context-data --group cli
+
+  - execution-engine:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-modify-mdpo-context-resolver --group cli
+
+  - state-persistence-to-extractinator:
+      layout: tiled
+      panes:
+        - consume mdpo-state-persist-to-extractinator-msgs --group cli
+
+  # - state-writer:
+  #     layout: tiled
+  #     panes:
+  #       - consume mdpo-state-writer-source --group cli
+
+  # - activity-writer:
+  #     layout: tiled
+  #     panes:
+  #       - consume mdpo-activity-writer-source --group cli

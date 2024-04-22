@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args $* ;}
+function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args "$@" ;}
 function updateEnvFile() { 
     gsed -i "/JAVA_HOME=/c export JAVA_HOME=/Library/Java/JavaVirtualMachines/$(ls /Library/Java/JavaVirtualMachines/ | grep jdk-$1)/Contents/Home" ~/.zsh_env
     fresh

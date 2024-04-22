@@ -1,0 +1,17 @@
+name: consumer-scp-device-connected-paned
+root: ~/
+
+windows:
+
+  - topics:
+      layout: tiled
+        - consume scp-device-connection-events-and-responses --group cli
+        - consume mdpo-spectrum-mobile-scp-device-connect-event --group cli
+        - consume speedboost-scp-device-connect --group cli
+        - consume speedboost-scp-device-connect-assemble-context-data --group cli
+        - consume speedboost-scp-device-connect-mdpo-context-resolver --group cli
+        - consume speedboost-scp-device-connect-mdpo-policy-evaluator --group cli
+        - consume speedboost-scp-device-connect-mdpo-get-eligibility-from-policy-result --group cli
+        - consume mdpo-state-persist-to-extractinator-msgs --group cli
+        # - consume mdpo-state-writer-source --group cli
+        # - consume mdpo-activity-writer-source --group cli

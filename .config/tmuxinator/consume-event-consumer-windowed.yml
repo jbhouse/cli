@@ -1,0 +1,29 @@
+name: consume-event-consumer-windowed
+root: ~/
+
+windows:
+
+  - speedboost-cms-device-connect:
+      layout: tiled
+      panes:
+        - consume speedboost-cms-device-connect --group cli
+  - speedboost-scp-modify:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-modify --group cli
+  - e speedboost-scp-tethering:
+      layout: tiled
+      panes:
+        - consume speedboost-scp-device-connect --group cli
+  - speedboost-pcmm-modify:
+      layout: tiled
+      panes:
+        - consume speedboost-pcmm-modify --group cli
+  - speedboost-pcmm-modify:
+      layout: tiled
+      panes:
+        - consume speedboost-pcmm-modify --group cli
+  - effie-mobileaccountdeact-teardown:
+      layout: tiled
+      panes:
+        - consume effie-mobileaccountdeact-teardown --group cli
