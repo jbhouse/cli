@@ -158,7 +158,7 @@ function git-branch-checkout () {
         git pull
     fi
     if [ -z "$1" ]
-      then git checkout $(branches)
+      then git checkout $(git branch -r | sed "s|origin/||" | fzf)
       else git checkout $1
     fi
     git pull
