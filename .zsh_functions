@@ -152,7 +152,7 @@ function git-branch-checkout () {
         git pull
     else
         if [ -z "$1" ]
-          then git checkout $(git branch -all | fzf)
+          then git checkout $(git branch --all | fzf)
           else git checkout $1
         fi
         git pull
