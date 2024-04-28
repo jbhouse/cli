@@ -33,6 +33,8 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
+source /opt/homebrew/Cellar/fzf/**/shell/key-bindings.zsh
+source /opt/homebrew/Cellar/fzf/**/shell/completion.zsh
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -69,6 +71,11 @@ HISTSIZE=1000
 SAVEHIST=1000
 setopt appendhistory
 
-#export FZF_TMUX=1
-#export FZF_ALT_C_OPTS="--preview 'tree -C {} | head -200'"
-source /opt/homebrew/Cellar/fzf/0.46.1/shell/key-bindings.zsh
+# CTRL-/ to toggle small preview window to see the full command
+# CTRL-Y to copy the command into clipboard using pbcopy
+export FZF_CTRL_R_OPTS="
+  --preview 'echo {}' --preview-window up:3:hidden:wrap
+  --bind 'ctrl-/:toggle-preview'
+  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+  --color header:italic
+  --header 'Press CTRL-Y to copy command into clipboard'"

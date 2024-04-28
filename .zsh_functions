@@ -61,6 +61,7 @@ function gitu() {
 }
 function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
 function gitStashDelete() { git stash drop $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function gitStashSave() { echo stash name: ; read stashName ; git stash save $stashName ;}
 function gac() { git add . ; git commit -m $(branch)" : $*" ;}
 function gacp() {
   BRANCH=$(branch)
@@ -79,8 +80,9 @@ function gcob () {
     then
       git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
       if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
-        then git stash
-        else echo commit message: ; read message ; git commit . -m "$(branch) : $message"
+#        then echo stash name: ; read stashName ;  git stash save $stashName ;
+		    then gitStashSave
+        else echo commit message: ; read message ; git commit . -m "$(branch) : $message" ;
       fi
     fi
     if [ -z "$1" ]
@@ -91,8 +93,8 @@ function gcob () {
 }
 
 # editor functions
-function ij() { (cd ~/repos && idea $(ls | fzf));}
-function io() { (cd ~/tmp && idea $(ls | fzf));}
+function ij() { (cd ~/repos && idea "$(pwd)$(ls | fzf)") ; }
+function io() { (cd ~/tmp && idea "$(pwd)$(ls | fzf)") ; }
 
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
