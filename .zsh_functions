@@ -106,7 +106,7 @@ function rclone() { (cd ~/repos && git clone "$1") ;}
 function git-file-revert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
-    then for i in $(printf %b "$FILE"); do git checkout "$i"; done
+    then for i in $(printf %b "$FILE"); do git restore "$i"; done
     else echo 'no files selected, no changes made'
   fi
 }
@@ -139,6 +139,8 @@ function git-add-commit-push() {
     else $(gac) ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
+# git checkout “$(git branch — all | fzf| tr -d ‘[:space:]’)”
+# in case we need to trim whitespace ^
 function git-branch-checkout () {
   git fetch --prune
     git pull
@@ -152,7 +154,7 @@ function git-branch-checkout () {
         git pull
     else
         if [ -z "$1" ]
-          then git checkout $(git branch -r | sed "s|origin/||" | fzf)
+          then git checkout $(git branch -all | fzf | tr -d `[:space:]`)
           else git checkout $1
         fi
         git pull

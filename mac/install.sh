@@ -21,11 +21,15 @@ brew install tmuxinator
 brew install bat
 brew install ripgrep
 brew install btop
+brew install zsh-syntax-highlighting
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/catppuccin/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/zsh-syntax-highlighting
+git clone https://github.com/junegunn/fzf-git.sh.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/scripts
 brew install bat
 brew install rectangle
 brew install gron
 brew install jq
+brew install jnv
 
 echo '----------------------------'
 echo 'install openjdk 8? (y/Y) or (n/N)'
