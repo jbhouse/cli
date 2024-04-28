@@ -27,7 +27,7 @@ alias cedit="code ~/.zshrc"
 alias cenv="code ~/.zsh_env"
 alias calias="code ~/.zsh_aliases"
 alias cfunc="code ~/.zsh_functions"
-alias ccli="code ~/Documents/cli"
+alias ccli="code ~/Documents/cli && code ~/.zsh_local"
 alias clocal="code ~/.zsh_local/.zsh_env_local"
 
 alias iedit='idea ~/.zshrc'
@@ -45,10 +45,13 @@ alias gpo="git pull origin"
 # this will unstage the last commit
 alias gu="git reset --soft HEAD~1"
 #alias gb="git branch --show-current"
-alias branches="git branch -r | sed \"s|origin/||\" | fzf"
-alias branch="git branch --show-current"
-alias gbc="branch | $CLIPBOARD"
-alias gcb="git checkout -b"
+# alias branches="git branch -r | sed \"s|origin/||\" | fzf"
+# alias branch="git branch --show-current"
+# alias gbc="branch | $CLIPBOARD"
+# alias gcb="git checkout -b"
+alias gac="git-add-commit"
+alias gcob="git-branch-checkout"
+alias gacp="git-add-commit-push"
 alias gcom="git checkout main && git pull"
 alias gpom="git pull origin main"
 alias clone="git clone"
@@ -58,14 +61,13 @@ alias gdb="git branch -D"
 #alias dc="docker compose"
 #alias dp="docker system prune -f --volumes"
 
-alias jh="echo $JAVA_HOME"
 alias cli="cd ~/Documents/cli"
 alias repos="cd ~/repos"
 
 alias tls="tmux ls"
 alias tka="tmux kill-server"
 
-#alias kubectl="k3s kubectl"
+# alias kubectl="k3s kubectl"
 
 alias la='ls -A'
 alias q='exit'
@@ -73,6 +75,7 @@ alias c='clear'
 alias h='history'
 alias home='cd ~'
 alias ex="/mnt/c/Windows/explorer.exe"
+# add this to zsh env
 alias ll='ls -alF'
 alias l='ls -CF'
 alias lsg='ls | grep'

@@ -33,8 +33,6 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
-source /opt/homebrew/Cellar/fzf/**/shell/key-bindings.zsh
-source /opt/homebrew/Cellar/fzf/**/shell/completion.zsh
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -70,6 +68,14 @@ HISTFILE=~/.zsh_history
 HISTSIZE=1000
 SAVEHIST=1000
 setopt appendhistory
+
+# Print tree structure in the preview window
+export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
+
+# Preview file content using bat (https://github.com/sharkdp/bat)
+export FZF_CTRL_T_OPTS="
+  --preview 'bat -n --color=always {}'
+  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
 
 # CTRL-/ to toggle small preview window to see the full command
 # CTRL-Y to copy the command into clipboard using pbcopy

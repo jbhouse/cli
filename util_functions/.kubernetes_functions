@@ -1,42 +1,61 @@
 #!/bin/bash
 
-function k-describe() {
-    ENV_NAME=$(genv)
-    NAMESPACE=$(getNamespace)
-    RESOURCE=$(kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME get $1 | fzf | awk '{ print $1 }')
-    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME describe $1 $RESOURCE
+function cube-describe() {
+    if [ ! -z "$1" ]
+        then RN=$1
+        else RN=$(printf "po\npl" | fzf)
+    fi
+    RESOURCE=$(cube get $RN | fzf | awk '{ print $1 }')
+    cube describe $RN $RESOURCE
 }
 
-function k-logs() {
-    ENV_NAME=$(genv)
-    NAMESPACE=$(getNamespace)
-    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME logs -f $(gpo)
+function cube-delete() { cube delete po $(cube-get-pod) ;}
+
+function cube-logs() { cube logs $* $(cube-get-pod) ;}
+
+function cube-configure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then senv ; fi ; }
+
+function cube() {
+    cube-configure
+#    echo "kubectl -n $KNS --kubeconfig=$KUBECONFIG $*"
+    kubectl -n $KNS --kubeconfig=$KUBECONFIG $*
 }
 
-function k-scale() {
-    ENV_NAME=$(genv)
-    NAMESPACE=$(getNamespace)
-    DEPLOY_NAME=$(kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME get deployments | fzf | awk '{ print $1 }')
-    echo "Scaling deployment ${DEPLOY_NAME} in environment ${ENV_NAME}"
+function cube-scale() {
+    DEPLOY_NAME=$(cube get deployments | fzf | awk '{ print $1 }')
+    echo "Scaling deployment ${DEPLOY_NAME}"
     echo "How many replicas would you like to scale to?"
     read replicacount
-    kubectl -n $NAMESPACE --kubeconfig=/home/P3193379/.kube/$ENV_NAME scale --replicas=$replicacount deployment/$DEPLOY_NAME
+    cube scale --replicas=$replicacount deployment/$DEPLOY_NAME
 }
 
-function gpo() {
-    kubectl -n $(getNamespace) --kubeconfig=~/.kube/$ENV_NAME get po | fzf | awk '{ print $1 }'
-}
+function cube-exec() { cube exec $(cube-get-pod) -- $* ;}
 
-function getNamespace() {
-    ENV_NAME=$(genv)
-    if [ $ENV_NAME == "dev" ]
-        then NAMESPACE=mdpo-dev
-    fi
-    if [[ $ENV_NAME == "uat" ]] || [[$ENV_NAME == "qa"]]
-        then NAMESPACE=mdpo
+function cube-terminal() {
+    if [ ! -z "$1" ]
+        then cube exec "$1" -it -- /bin/sh
+        else cube exec $(cube-get-pod) -it -- bash
     fi
 }
 
-function genv() {
-    cat ~/.kube/config | grep server | sed 's/^[[:space:]]*//g' | sed -n '/:/s/server\: https\:\/\/api.//p' | sed 's/[-k8s].*$//'
+function cube-all-pods() {
+    if [ ! -z "$1" ]
+        then cube get po | awk '{ print $1 }' | grep $1
+        else cube get po | awk '{ print $1 }'
+    fi
+}
+
+function cube-get-pod() { cube get po | awk '{ print $1 }' | fzf ;}
+
+function pods() {
+  cube get po | fzf \
+    --bind "ctrl-o:execute:${EDITOR:-vim} <(kubectl logs --all-containers --kubeconfig=$KUBECONFIG -n $KNS {1}) > /dev/tty" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete pod {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get po" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG logs -n $KNS {1}" \
+    --info=inline --header-lines=1 \
+    --prompt "$(kubectl config current-context | sed 's/-context$//')> " \
+    --header $'╱ CTRL-O (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+#    --bind "enter:execute:kubectl exec -it --kubeconfig=$KUBECONFIG -n $KNS {1} -- /bin/sh > /dev/tty"
 }

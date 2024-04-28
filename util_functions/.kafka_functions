@@ -1,74 +1,32 @@
 #!/bin/bash
 
-function kafkaTopicPublish() {
-  source ~/.zsh_env
-  TOPIC_NAME=$(cat ~/Documents/kafka_messages/kafka_map.json | jq | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//')
-  micro ~/Documents/kafka_messages/$TOPIC_NAME.json #make it so this only happens if passed a flag
-  echo "jq -rc . ~/Documents/kafka_messages/$TOPIC_NAME.json | kafka-console-producer --broker-list $BOOTSTRAP_SERVER --topic $TOPIC_NAME"
-  # jq -rc . ~/Documents/kafka_messages/$TOPIC_NAME.json | kafka-console-producer --broker-list $BOOTSTRAP_SERVER --topic $TOPIC_NAME
+function kafka-publish-message() {
+  source ~/.zsh_env;
+  TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+  while getopts 'e' flag; do
+    case "${flag}" in
+      e) micro ~/Documents/kafka_messages/"$TOPIC_NAME".json ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+  # echo "publishing message to $TOPIC_NAME"
+  jq -rc . "$HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
 
-function kafkaTopicConsume() {
-  source ~/.zsh_env
-  TOPIC_NAME=$(cat ~/Documents/kafka_messages/kafka_map.json | jq | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//')
-  consume $TOPIC_NAME
+function kafka-consume-message() {
+  # need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
+  TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+  echo "consuming from $TOPIC_NAME"
+  source ~/.zsh_env;
+  # echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@"
+  kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@"
 }
 
-function kafkaTopicsList() {
-  kafka-topics.sh --bootstrap-server $bootstrapServers --list 2> /dev/null
+function kafka-consume-message-formatted() {
+  TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+  echo "consuming from $TOPIC_NAME"
+  source ~/.zsh_env;
+  echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@ | jq"
+  kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@" | jq
 }
-
-function consume() {
-  kafka-console-consumer --topic $1 --bootstrap-server $BOOTSTRAP_SERVER
-}
-
-function kafkaConsumerGroupList() {
-  kafka-consumer-groups --list --bootstrap-server $bootstrapServers
-}
-
-function kafkaConsumerGroupDescribe() {
-  kafka-consumer-groups --describe --bootstrap-server $bootstrapServers --group $1
-  # can this be used to describe multiple groups? what about all groups?
-}
-
-function kafkaConsumerGroupDelete() {
-  echo "kafka-consumer-groups --delete --bootstrap-server $bootstrapServers --group $1"
-  kafka-consumer-groups --delete --bootstrap-server $bootstrapServers --group $1
-}
-
-# function list-envs() { echo 'dev\nqa\nqa1\nuat\nstage\n\nChoose the environment. Current environment: ' $KAFKA_ENV | fzf ;}
-
-# function deleteTopic() {
-#   getEnv $1
-
-#   if [[ -z $2 ]]
-#     then
-#       export tName=$(topics-msk-list)
-#     else
-#       export tName=$2
-#   fi
-
-#   ~/Downloads/kafka-2.7.0-src/bin/kafka-topics.sh --zookeeper $MYZK --delete --topic $tName 2> /dev/null
-# }
-# # eventually set things up to use multi-select and run against many topics at once
-
-# function topics-msk-read-end() {
-#   getTopicNameAndEnv "msk" $1 $2
-
-#   if [[ -z "$TOPIC_NAME" ]] || [[ -z "$KAFKA_ENV" ]]
-#     then
-#       echo topic: $TOPIC_NAME
-#       echo environment: $KAFKA_ENV
-#       echo 'both must be provided in order for the command to run'
-#     else
-#       echo " "
-#       echo reading from topic: $TOPIC_NAME
-#       echo in environment: $KAFKA_ENV
-#       echo " "
-#       ~/Downloads/confluent-7.2.1/bin/kafka-avro-console-consumer \
-#       --topic $TOPIC_NAME \
-#       --bootstrap-server $bootstrapServers \
-#       --property schema.registry.url=$schemaRegistry \
-#       --formatter io.confluent.kafka.formatter.AvroMessageFormatter | jq $3 --unbuffered
-#   fi
-# }
