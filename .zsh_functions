@@ -139,8 +139,6 @@ function git-add-commit-push() {
     else $(gac) ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
-# git checkout “$(git branch — all | fzf| tr -d ‘[:space:]’)”
-# in case we need to trim whitespace ^
 function git-branch-checkout () {
   git fetch --prune
     git pull
@@ -154,7 +152,7 @@ function git-branch-checkout () {
         git pull
     else
         if [ -z "$1" ]
-          then git checkout $(git branch -all | fzf | tr -d '[:space:]')
+          then git checkout $(git branch -all | fzf)
           else git checkout $1
         fi
         git pull
