@@ -148,13 +148,13 @@ function git-branch-checkout () {
       then
         git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
         if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
-          then git stash
+          then echo commit message: ; read message ; git stash save "$message"
           else echo commit message: ; read message ; git commit . -m "$(git-branch) : $message"
         fi
         git pull
     else
         if [ -z "$1" ]
-          then git checkout $(git branch -all | fzf | tr -d `[:space:]`)
+          then git checkout $(git branch -all | fzf | tr -d '[:space:]')
           else git checkout $1
         fi
         git pull
