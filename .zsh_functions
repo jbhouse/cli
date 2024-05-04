@@ -36,6 +36,16 @@ function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
 function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
 function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
 
+git-diff-unstaged() {
+  preview="git diff $@ --color=always -- {-1}"
+  git diff $@ --name-only | fzf -m --ansi --preview $preview
+}
+
+git-diff-staged() {
+  preview="git diff --cached $@ --color=always -- {-1}"
+  git diff --cached $@ --name-only | fzf -m --ansi --preview $preview
+}
+
 function containers() {
   docker ps -a | fzf \
     --bind "ctrl-o:execute:${EDITOR:-vim} <(docker container logs {1}) > /dev/tty" \
