@@ -102,6 +102,15 @@ function docker-container-exec () {
 }
 
 # git functions (need to handle ??)
+function git-diff-unstaged() {
+  preview="git diff $@ --color=always -- {-1}"
+  git diff $@ --name-only | fzf -m --ansi --preview $preview
+}
+
+function git-diff-staged() {
+  preview="git diff --cached $@ --color=always -- {-1}"
+  git diff --cached $@ --name-only | fzf -m --ansi --preview $preview
+}
 function rclone() { (cd ~/repos && git clone "$1") ;}
 function git-file-revert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
