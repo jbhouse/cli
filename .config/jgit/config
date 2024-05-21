@@ -13,3 +13,6 @@
 [filesystem "AdoptOpenJDK|1.8.0_292|/dev/disk1s1"]
 	timestampResolution = 1001 milliseconds
 	minRacyThreshold = 0 nanoseconds
+[filesystem "Homebrew|21.0.3|/dev/disk1s1"]
+	timestampResolution = 3000 nanoseconds
+	minRacyThreshold = 0 nanoseconds

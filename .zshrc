@@ -33,8 +33,10 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
-source "/usr/local/opt/fzf/shell/completion.zsh"
-source "/usr/local/opt/fzf/shell/key-bindings.zsh"
+source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
+bindkey '^I' fzf_completion
+# source "/usr/local/opt/fzf/shell/completion.zsh"
+# source "/usr/local/opt/fzf/shell/key-bindings.zsh"
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -49,6 +51,8 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:*:*' fzf-preview 'less ${(Q)realpath}'
 # switch group using `,` and `.`
 zstyle ':fzf-tab:*' switch-group ',' '.'
+
+zstyle ':completion:*' fzf-search-display true
 
 # User configuration
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -91,3 +95,5 @@ export FZF_CTRL_R_OPTS="
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
   --color header:italic
   --header 'Press CTRL-Y to copy command into clipboard'"
+
+eval "$(fzf --zsh)"
