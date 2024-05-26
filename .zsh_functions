@@ -66,7 +66,7 @@ function networks() {
 
 function images() {
   docker image ls | fzf \
-    --bind "ctrl-d:execute:docker image rm {1} > /dev/null;" \
+    --bind "ctrl-d:execute:docker image rm {3} > /dev/null;" \
     --bind "ctrl-p:execute:docker image prune -f > /dev/null" \
     --bind "ctrl-r:reload:docker image ls" \
     --info=inline --layout=reverse --header-lines=1 \
@@ -170,8 +170,34 @@ function gitStashDeleteStash() {
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gitAdd() { gitDiffUnstaged ;}
 # checkout if unstaged is porcelain
-function gitAddStash() { gitAdd ; git stash save -S $* ;}
-function gitAddCommit() { gitAdd ; git commit -m "$(gitBranch) : $*" ;}
+function gitAddStash() {
+  ISET="false"
+  while getopts 'i' flag; do
+    case "${flag}" in
+      i) ISET="true" ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+  if [[ $ISET == "true" ]];
+    then gitAdd ; git stash save -S "${@:2}" ;
+    else git add . ; git stash save -S $* ;
+  fi
+}
+function gitAddCommit() { 
+  ISET="false"
+  while getopts 'i' flag; do
+    case "${flag}" in
+      i) ISET="true" ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+  if [[ $ISET == "true" ]];
+    then gitAdd ; COMMIT_MESSAGE="${@:2}" ; git commit -m "$(gitBranch) : $COMMIT_MESSAGE" ;
+    else git add . ; git commit -m "$(gitBranch) : $*" ;
+  fi
+  }
 function gitAddCommitPush() {
   BRANCH=$(gitBranch);
   if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]] || [[ "${BRANCH}" == *"develop"* ]];
