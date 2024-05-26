@@ -33,11 +33,7 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
-source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_frappe-zsh-syntax-highlighting.zsh
-# source $(brew --prefix)/Cellar/fzf/**/shellcompletion.zsh
-# source $(brew --prefix)/Cellar/fzf/**/shell/key-bindings.zsh
-eval "$(fzf --zsh)"
 # source ~/.oh-my-zsh/custom/scripts/fzf-git.sh
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

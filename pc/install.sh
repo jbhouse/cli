@@ -2,24 +2,10 @@
 
 sudo apt -y update && sudo apt -y upgrade && sudo apt -y dist-upgrade && sudo apt -y autoremove
 
-ln -s /mnt/c/Users/$(cd /mnt/c && /mnt/c/Windows/System32/cmd.exe /c 'echo %USERNAME%' | sed -e 's/\r//g')/Documents ~/Documents
-ln -s /mnt/c/Users/$(cd /mnt/c && /mnt/c/Windows/System32/cmd.exe /c 'echo %USERNAME%' | sed -e 's/\r//g')/Downloads ~/Downloads
+ln -s /mnt/c/Users/"$(cd /mnt/c && /mnt/c/Windows/System32/cmd.exe /c 'echo %USERNAME%' | sed -e 's/\r//g')"/Documents ~/Documents
+ln -s /mnt/c/Users/"$(cd /mnt/c && /mnt/c/Windows/System32/cmd.exe /c 'echo %USERNAME%' | sed -e 's/\r//g')"/Downloads ~/Downloads
 mkdir /mnt/c/repos && ln -s /mnt/c/repos ~/repos
 mkdir /mnt/c/temp && ln -s /mnt/c/temp ~/temp
-
-echo '----------------------------'
-echo 'installing software packages'
-echo '----------------------------'
-
-sudo apt install -y zsh
-(cd ~ && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)")
-sudo apt install -y micro
-sudo apt install -y maven
-sudo apt install -y fzf
-sudo apt install -y tmuxinator
-sudo apt install -y bat
-sudo apt install -y ripgrep
-sudo apt install -y btop
 
 echo 'install openjdk 8? (y/Y) or (n/N)'
 read install8

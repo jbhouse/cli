@@ -102,11 +102,26 @@ function docker-container-exec () {
 }
 
 # git functions (need to handle ??)
+# tmux new-session -d -s foo 'exec pfoo'
+# tmux send-keys 'bundle exec thin start' 'C-m'
+# tmux rename-window 'Foo'
+# tmux select-window -t foo:0
+# tmux split-window -h 'exec pfoo'
+# tmux send-keys 'bundle exec compass watch' 'C-m'
+# tmux split-window -v -t 0 'exec pfoo'
+# tmux send-keys 'rake ts:start' 'C-m'
+# tmux split-window -v -t 1 'exec pfoo'
+# tmux -2 attach-session -t foo
+
+function split-and-execute() {
+  for i in $*; do;
+    echo "split and execute $i"
+  done;
+}
 function git-diff-unstaged() {
   preview="git diff $@ --color=always -- {-1}"
   git diff $@ --name-only | fzf -m --ansi --preview $preview
 }
-
 function git-diff-staged() {
   preview="git diff --cached $@ --color=always -- {-1}"
   git diff --cached $@ --name-only | fzf -m --ansi --preview $preview
