@@ -12,8 +12,6 @@
 # /\1/        : and replace with the first backslash-bracketed expression you found
 
 function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
-# function reports() { cmd.exe /c start microsoft-edge:$PWD/app/build/reports ;}
-
 function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*└── //' ;}
 
 function pipelines() {
@@ -27,8 +25,8 @@ function cc() { $* | $CLIPBOARD ;}
 function cpl() { fc -ln -1 | $CLIPBOARD ;}
 
 # maven functions
-function mist() { mvn -T 1C clean install $1 -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
-function mim() { mvn -pl $(ls -d */ | fzf) -amd clean install ;}
+function mist() { mvn -T 1C clean install "$@" -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
+function mid() { mvn -pl "$@" -amd clean install ;}
 
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
@@ -100,8 +98,6 @@ function docker-container-terminal () {
 function docker-container-exec () {
   docker exec $(docker ps -a | fzf | awk '{print $1}') $*
 }
-
-# git functions (need to handle ??)
 # tmux new-session -d -s foo 'exec pfoo'
 # tmux send-keys 'bundle exec thin start' 'C-m'
 # tmux rename-window 'Foo'
@@ -113,36 +109,54 @@ function docker-container-exec () {
 # tmux split-window -v -t 1 'exec pfoo'
 # tmux -2 attach-session -t foo
 
-function split-and-execute() {
+function splitAndExecute() {
   for i in $*; do;
     echo "split and execute $i"
   done;
 }
-function git-diff-unstaged() {
+
+# git functions (need to handle ??)
+function gitDiffUnstaged() {
   preview="git diff $@ --color=always -- {-1}"
-  git diff $@ --name-only | fzf -m --ansi --preview $preview
+  git diff $@ --name-only | fzf \
+      -m --ansi \
+      --bind "ctrl-o:execute:${EDITOR:-vim} {1} > /dev/tty" \
+      --bind "ctrl-s:execute:git add {1} > /dev/null" \
+      --bind "ctrl-r:reload:git diff --name-only" \
+      --bind "ctrl-e:execute:git checkout {1} > /dev/null" \
+      --preview $preview \
+      --prompt "untracked changes >" \
+      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-R (reload) | CTRL-D (revert changes)\n'
 }
-function git-diff-staged() {
+function gitDiffStaged() {
   preview="git diff --cached $@ --color=always -- {-1}"
-  git diff --cached $@ --name-only | fzf -m --ansi --preview $preview
+  git diff --cached $@ --name-only | fzf \
+    -m --ansi \
+    --bind "ctrl-o:execute:${EDITOR:-vim} {1} > /dev/tty" \
+    --bind "ctrl-s:execute:git restore --staged {1} > /dev/null" \
+    --bind "ctrl-r:reload:git diff --cached $@ --name-only" \
+    --preview $preview \
+    --prompt "staged changes >" \
+    --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-R (reload)\n'
 }
 function rclone() { (cd ~/repos && git clone "$1") ;}
-function git-file-revert() {
+function tclone() { (cd ~/tmp && git clone "$1") ;}
+function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
-    then for i in $(printf %b "$FILE"); do git restore "$i"; done
+    then for i in $(printf %b "$FILE"); do git checkout "$i"; done
     else echo 'no files selected, no changes made'
   fi
 }
-function git-file-unstage() {
+function gitFileUnstage() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
     then for i in $(printf %b $FILE); do git restore --staged $i; done
     else echo 'no files selected, no changes made'
   fi
 }
-function git-stash-apply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
-function git-stash-delete-stash() {
+function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function gitStashDeleteStash() {
   STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
   echo "$STASHES"
   if [ ! -z "$STASHES" ];
@@ -151,47 +165,44 @@ function git-stash-delete-stash() {
   fi
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
-function git-add-commit() { git add -i ; BRANCH=$(git-branch) ; git commit . -m "${BRANCH} : $*" ;}
-function git-add-commit-push() {
-  BRANCH=$(git-branch);
+function gitAdd() { gitDiffUnstaged ;}
+function gitAddStash() { gitAdd ; git stash save -S $* ;}
+function gitAddCommit() { gitAdd ; git commit -m "$(gitBranch) : $*" ;}
+function gitAddCommitPush() {
+  BRANCH=$(gitBranch);
   if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]] || [[ "${BRANCH}" == *"develop"* ]];
     then echo "are you sure you want to push to ${BRANCH}? y/n" ; read answer ;
-    if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]];
-      then git add . ; git commit -m "${BRANCH} : $*" ; git push ;
-      else echo "commit/push aborted.";
-    fi
-    else $(gac) ; git push --set-upstream origin ${BRANCH} ;
+      if [[ "${answer}" == "Y" ]] || [[ "${answer}" == "y" ]];
+        then gitAddCommit $* ; git push ;
+        else echo "commit/push aborted.";
+      fi
+    else gitAddCommit $* ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
-function git-branch-checkout () {
+function gitBranchCheckout () {
   git fetch --prune
-    git pull
-    if [[ `git status --porcelain` ]];
-      then
-        git add . ; echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
-        if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
-          then echo commit message: ; read message ; git stash save "$message"
-          else echo commit message: ; read message ; git commit . -m "$(git-branch) : $message"
-        fi
-        git pull
-    else
-        if [ -z "$1" ]
-          then git checkout $(git branch --all | fzf)
-          else git checkout $1
-        fi
-        git pull
-    fi
+  git pull
+  if [[ `git status --porcelain` ]];
+    then
+      echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
+      if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
+        then echo "stash message: " ; read message ; gitAddStash $message
+        else echo "commit message: " ; read message ; gitAddCommit $message
+      fi
+      gitBranchCheckout
+  else
     if [ -z "$1" ]
       then git checkout $(git branch -r | sed "s|origin/||" | fzf)
       else git checkout $1
     fi
     git pull
+  fi
 }
 
-function git-branch-delete() { git branch -D $*; }
-function git-branch() { git branch --show-current; }
-function git-branch-copy() { git branch --show-current | $CLIPBOARD; }
-function git-branch-create() { git checkout -b $*; }
+function gitBranchDelete() { git branch -D $*; }
+function gitBranch() { git branch --show-current; }
+function gitBranchCopy() { git branch --show-current | $CLIPBOARD; }
+function gitBranchCreate() { git checkout -b $*; }
 
 # editor functions
 function ij() { (cd ~/repos && idea "$(pwd)$(ls | fzf)") ; }
@@ -216,7 +227,7 @@ function j8() { updateEnvFile 8 ;}
 function j11() { updateEnvFile 11 ;}
 function j17() { updateEnvFile 17 ;}
 function j21() { updateEnvFile 21 ;}
-function backup() { (cd ~/Documents/cli && git add . && git-add-commit-push $*) ;}
+function backup() { (cd ~/Documents/cli && gitAddCommitPush $*) ;}
 
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}

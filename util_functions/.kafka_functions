@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function kafka-publish-message() {
+function publishKafkaMessage() {
   source ~/.zsh_env;
   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   while getopts 'e' flag; do
@@ -13,9 +13,8 @@ function kafka-publish-message() {
   # echo "publishing message to $TOPIC_NAME"
   jq -rc . "$HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
-
-function kafka-consume-message() {
-  # need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
+# need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
+function consumeKafkaMessage() {
   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   echo "consuming from $TOPIC_NAME"
   source ~/.zsh_env;
@@ -23,7 +22,7 @@ function kafka-consume-message() {
   kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@"
 }
 
-function kafka-consume-message-formatted() {
+function consumeKafkaMessageFormatted() {
   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   echo "consuming from $TOPIC_NAME"
   source ~/.zsh_env;

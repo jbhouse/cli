@@ -35,6 +35,13 @@ source ~/.zsh_aliases
 source ~/.zsh_functions
 source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_frappe-zsh-syntax-highlighting.zsh
 # source ~/.oh-my-zsh/custom/scripts/fzf-git.sh
+
+  # source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
+  # bindkey '^I' fzf_completion
+  # these two were needed on intel mbp
+
+# source "/usr/local/opt/fzf/shell/completion.zsh"
+# source "/usr/local/opt/fzf/shell/key-bindings.zsh"
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -49,6 +56,9 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':fzf-tab:complete:*:*' fzf-preview 'less ${(Q)realpath}'
 # switch group using `,` and `.`
 zstyle ':fzf-tab:*' switch-group ',' '.'
+
+# zstyle ':completion:*' fzf-search-display true
+# needed on intel?^
 
 # User configuration
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -70,6 +80,10 @@ HISTFILE=~/.zsh_history
 HISTSIZE=1000
 SAVEHIST=1000
 setopt appendhistory
+
+# ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
+# export PATH="/Users/P3193379/.rd/bin:$PATH"
+# ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 
 # Print tree structure in the preview window
 export FZF_ALT_C_OPTS="--preview 'tree -C {}'"
