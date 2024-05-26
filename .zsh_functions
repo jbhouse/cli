@@ -131,16 +131,17 @@ function gitDiffUnstaged() {
       --prompt "untracked changes >" \
       --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-E (revert changes) | CTRL-R (reload)\n'
 }
-function gitDiffStaged() { # add the ability to stash
+function gitDiffStaged() {
   preview="git diff --cached $@ --color=always -- {-1}"
   git diff --cached $@ --name-only | fzf \
     -m --ansi \
     --bind "ctrl-o:execute:${EDITOR:-vim} {1} > /dev/tty" \
     --bind "ctrl-s:execute:git restore --staged {1} > /dev/null" \
     --bind "ctrl-r:reload:git diff --cached $@ --name-only" \
+    --bind "ctrl-e:execute:git stash push {1}" \
     --preview $preview \
     --prompt "staged changes >" \
-    --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-R (reload)\n'
+    --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
 }
 function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
 function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
@@ -194,8 +195,8 @@ function gitAddCommit() {
     esac
   done
   if [[ $ISET == "true" ]];
-    then gitAdd ; COMMIT_MESSAGE="${@:2}" ; git commit -m "$(gitBranch) : $COMMIT_MESSAGE" ;
-    else git add . ; git commit -m "$(gitBranch) : $*" ;
+    then gitAdd ; COMMIT_MESSAGE="${@:2}" ; git commit -m "$(gitBranch): $COMMIT_MESSAGE" ;
+    else git add . ; git commit -m "$(gitBranch): $*" ;
   fi
   }
 function gitAddCommitPush() {
