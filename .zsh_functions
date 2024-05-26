@@ -42,14 +42,14 @@ function containers() {
     --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
     --bind "ctrl-x:execute:docker start {1} > /dev/null" \
     --bind "ctrl-d:execute:docker rm {1} -v > /dev/null;" \
-    --bind "ctrl-p:execute:docker container prune -f > /dev/null" \
+    --bind "ctrl-p:execute:docker system prune > /dev/null" \
     --bind "ctrl-r:reload:docker ps -a" \
     --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
     --info=inline --layout=reverse --header-lines=1 \
     --preview-window 'up,70%,border-bottom,+{2}+3/3,~3' \
     --preview "docker container logs {1}" \
     --prompt "containers >" \
-    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container and anonymous volumes) | CTRL-P (prune networks) | CTRL-R (reload) | ENTER (exec into container)\n'
+    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container) | CTRL-P (prune system) | CTRL-R (reload) | ENTER (exec into container)\n'
 }
 
 function networks() {
@@ -80,42 +80,45 @@ function stopContainersUsingImage() {
   for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;
 }
 
-function docker-container-stop() {
+function dockerContainerStop() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being stopped
     docker stop "$i" 1> /dev/null;
   done
 }
-function docker-container-start() {
+function dockerContainerStart() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being restarted
     docker restart "$i" 1> /dev/null;
   done
 }
-function docker-container-terminal () {
+function dockerContainerTerminal () {
   docker exec -ti $(docker ps -a | fzf | awk '{print $1}') /bin/sh
 }
-function docker-container-exec () {
+function dockerContainerExec () {
   docker exec $(docker ps -a | fzf | awk '{print $1}') $*
-}
-# tmux new-session -d -s foo 'exec pfoo'
-# tmux send-keys 'bundle exec thin start' 'C-m'
-# tmux rename-window 'Foo'
-# tmux select-window -t foo:0
-# tmux split-window -h 'exec pfoo'
-# tmux send-keys 'bundle exec compass watch' 'C-m'
-# tmux split-window -v -t 0 'exec pfoo'
-# tmux send-keys 'rake ts:start' 'C-m'
-# tmux split-window -v -t 1 'exec pfoo'
-# tmux -2 attach-session -t foo
-
-function splitAndExecute() {
-  for i in $*; do;
-    echo "split and execute $i"
-  done;
 }
 
 # git functions (need to handle ??)
+function gitDiff() {
+  tmux new-session -d -s $(pwd)
+  if [[ $* == "V" ]] || [[ $* == "v" ]];
+    then 
+      # Split vertically
+      tmux split-window -h;
+
+      # Send the 'git' command to both panes
+      tmux send-keys -t $(pwd):0.0 'gitDiffStaged' C-m;
+      tmux send-keys -t $(pwd):0.1 'gitDiffUnstaged' C-m;
+    else 
+      tmux rename-window "gitDiffStaged";
+      tmux send-keys -t $(pwd):0 'gitDiffStaged' C-m;
+
+      tmux new-window -n gitDiffUnstaged;
+      tmux send-keys -t $(pwd):1 'gitDiffUnstaged' C-m;
+  fi
+  tmux attach-session -t $(pwd);
+}
 function gitDiffUnstaged() {
   preview="git diff $@ --color=always -- {-1}"
   git diff $@ --name-only | fzf \
@@ -126,9 +129,9 @@ function gitDiffUnstaged() {
       --bind "ctrl-e:execute:git checkout {1} > /dev/null" \
       --preview $preview \
       --prompt "untracked changes >" \
-      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-R (reload) | CTRL-D (revert changes)\n'
+      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-E (revert changes) | CTRL-R (reload)\n'
 }
-function gitDiffStaged() {
+function gitDiffStaged() { # add the ability to stash
   preview="git diff --cached $@ --color=always -- {-1}"
   git diff --cached $@ --name-only | fzf \
     -m --ansi \
@@ -139,8 +142,8 @@ function gitDiffStaged() {
     --prompt "staged changes >" \
     --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-R (reload)\n'
 }
-function rclone() { (cd ~/repos && git clone "$1") ;}
-function tclone() { (cd ~/tmp && git clone "$1") ;}
+function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
+function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -166,6 +169,7 @@ function gitStashDeleteStash() {
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gitAdd() { gitDiffUnstaged ;}
+# checkout if unstaged is porcelain
 function gitAddStash() { gitAdd ; git stash save -S $* ;}
 function gitAddCommit() { gitAdd ; git commit -m "$(gitBranch) : $*" ;}
 function gitAddCommitPush() {
