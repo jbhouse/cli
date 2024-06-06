@@ -110,7 +110,7 @@ function gitDiffUnstaged() {
       --bind "ctrl-e:execute:git checkout {1} > /dev/null" \
       --preview $preview \
       --prompt "untracked changes >" \
-      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-R (reload) | CTRL-D (revert changes)\n'
+      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-R (reload) | CTRL-E (revert changes)\n'
 }
 function gitDiffStaged() {
   preview="git diff --cached $@ --color=always -- {-1}"

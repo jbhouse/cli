@@ -40,6 +40,7 @@ alias ilocal="idea ~/.zsh_local/.zsh_env_local"
 # git aliases
 alias gs="git status"
 alias gas="gitAddStash"
+alias gasa="git add . ; git stash"
 alias gaso="git stash apply 0"
 alias gpo="git pull origin"
 # this will unstage the last commit
