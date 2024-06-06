@@ -6,5 +6,7 @@
 .config/tmuxinator/paths
 .config/tmuxinator/proxy.yml
 .config/tmuxinator/logs*
+.config/tmuxinator/logs*
 .config/tmuxinator/consumer*
+.config/github-copilot
 # .zsh_local

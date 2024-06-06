@@ -35,6 +35,13 @@ source ~/.zsh_aliases
 source ~/.zsh_functions
 source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
 bindkey '^I' fzf_completion
+# source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_frappe-zsh-syntax-highlighting.zsh
+# source ~/.oh-my-zsh/custom/scripts/fzf-git.sh
+
+  # source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
+  # bindkey '^I' fzf_completion
+  # these two were needed on intel mbp
+
 # source "/usr/local/opt/fzf/shell/completion.zsh"
 # source "/usr/local/opt/fzf/shell/key-bindings.zsh"
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
@@ -53,6 +60,7 @@ zstyle ':fzf-tab:complete:*:*' fzf-preview 'less ${(Q)realpath}'
 zstyle ':fzf-tab:*' switch-group ',' '.'
 
 zstyle ':completion:*' fzf-search-display true
+# needed on intel?^
 
 # User configuration
 # export MANPATH="/usr/local/man:$MANPATH"

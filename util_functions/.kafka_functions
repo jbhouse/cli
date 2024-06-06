@@ -13,7 +13,7 @@ function publishKafkaMessage() {
   # echo "publishing message to $TOPIC_NAME"
   jq -rc . "$HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
-
+# need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
 function consumeKafkaMessage() {
   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   echo "consuming from $TOPIC_NAME"

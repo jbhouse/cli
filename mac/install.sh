@@ -9,21 +9,6 @@ mkdir ~/temp
 # alias update="brew update --auto-update && brew upgrade && (cd ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions && git pull)"
 
 echo '----------------------------'
-echo 'installing software packages'
-echo '----------------------------'
-
-brew install zsh
-(cd ~ && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)")
-brew install micro
-brew install maven
-brew install fzf
-brew install tmuxinator
-brew install bat
-brew install ripgrep
-brew install btop
-git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-
-echo '----------------------------'
 echo 'install openjdk 8? (y/Y) or (n/N)'
 read install8
 echo 'install openjdk 11? (y/Y) or (n/N)'

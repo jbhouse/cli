@@ -42,14 +42,14 @@ function containers() {
     --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
     --bind "ctrl-x:execute:docker start {1} > /dev/null" \
     --bind "ctrl-d:execute:docker rm {1} -v > /dev/null;" \
-    --bind "ctrl-p:execute:docker container prune -f > /dev/null" \
+    --bind "ctrl-p:execute:docker system prune > /dev/null" \
     --bind "ctrl-r:reload:docker ps -a" \
     --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
     --info=inline --layout=reverse --header-lines=1 \
     --preview-window 'up,70%,border-bottom,+{2}+3/3,~3' \
     --preview "docker container logs {1}" \
     --prompt "containers >" \
-    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container and anonymous volumes) | CTRL-P (prune networks) | CTRL-R (reload) | ENTER (exec into container)\n'
+    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container) | CTRL-P (prune system) | CTRL-R (reload) | ENTER (exec into container)\n'
 }
 
 function networks() {
@@ -66,7 +66,7 @@ function networks() {
 
 function images() {
   docker image ls | fzf \
-    --bind "ctrl-d:execute:docker image rm {1} > /dev/null;" \
+    --bind "ctrl-d:execute:docker image rm {3} > /dev/null;" \
     --bind "ctrl-p:execute:docker image prune -f > /dev/null" \
     --bind "ctrl-r:reload:docker image ls" \
     --info=inline --layout=reverse --header-lines=1 \
@@ -80,26 +80,45 @@ function stopContainersUsingImage() {
   for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;
 }
 
-function docker-container-stop() {
+function dockerContainerStop() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being stopped
     docker stop "$i" 1> /dev/null;
   done
 }
-function docker-container-start() {
+function dockerContainerStart() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container $(docker ps -a | grep $i | awk '{print $2}') is being restarted
     docker restart "$i" 1> /dev/null;
   done
 }
-function docker-container-terminal () {
+function dockerContainerTerminal () {
   docker exec -ti $(docker ps -a | fzf | awk '{print $1}') /bin/sh
 }
-function docker-container-exec () {
+function dockerContainerExec () {
   docker exec $(docker ps -a | fzf | awk '{print $1}') $*
 }
 
 # git functions (need to handle ??)
+function gitDiff() {
+  tmux new-session -d -s $(pwd)
+  if [[ $* == "V" ]] || [[ $* == "v" ]];
+    then 
+      # Split vertically
+      tmux split-window -h;
+
+      # Send the 'git' command to both panes
+      tmux send-keys -t $(pwd):0.0 'gitDiffStaged' C-m;
+      tmux send-keys -t $(pwd):0.1 'gitDiffUnstaged' C-m;
+    else 
+      tmux rename-window "gitDiffStaged";
+      tmux send-keys -t $(pwd):0 'gitDiffStaged' C-m;
+
+      tmux new-window -n gitDiffUnstaged;
+      tmux send-keys -t $(pwd):1 'gitDiffUnstaged' C-m;
+  fi
+  tmux attach-session -t $(pwd);
+}
 function gitDiffUnstaged() {
   preview="git diff $@ --color=always -- {-1}"
   git diff $@ --name-only | fzf \
@@ -110,7 +129,7 @@ function gitDiffUnstaged() {
       --bind "ctrl-e:execute:git checkout {1} > /dev/null" \
       --preview $preview \
       --prompt "untracked changes >" \
-      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-R (reload) | CTRL-E (revert changes)\n'
+      --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-E (revert changes) | CTRL-R (reload)\n'
 }
 function gitDiffStaged() {
   preview="git diff --cached $@ --color=always -- {-1}"
@@ -119,11 +138,13 @@ function gitDiffStaged() {
     --bind "ctrl-o:execute:${EDITOR:-vim} {1} > /dev/tty" \
     --bind "ctrl-s:execute:git restore --staged {1} > /dev/null" \
     --bind "ctrl-r:reload:git diff --cached $@ --name-only" \
+    --bind "ctrl-e:execute:git stash push {1}" \
     --preview $preview \
     --prompt "staged changes >" \
-    --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-R (reload)\n'
+    --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
 }
-function rclone() { (cd ~/repos && git clone "$1") ;}
+function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
+function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -149,8 +170,35 @@ function gitStashDeleteStash() {
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gitAdd() { gitDiffUnstaged ;}
-function gitAddStash() { gitAdd ; git stash save -S $* ;}
-function gitAddCommit() { gitAdd ; git commit -m "$(gitBranch) : $*" ;}
+# checkout if unstaged is porcelain
+function gitAddStash() {
+  ISET="false"
+  while getopts 'i' flag; do
+    case "${flag}" in
+      i) ISET="true" ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+  if [[ $ISET == "true" ]];
+    then gitAdd ; git stash save -S "${@:2}" ;
+    else git add . ; git stash save -S $* ;
+  fi
+}
+function gitAddCommit() { 
+  ISET="false"
+  while getopts 'i' flag; do
+    case "${flag}" in
+      i) ISET="true" ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+  if [[ $ISET == "true" ]];
+    then gitAdd ; COMMIT_MESSAGE="${@:2}" ; git commit -m "$(gitBranch): $COMMIT_MESSAGE" ;
+    else git add . ; git commit -m "$(gitBranch): $*" ;
+  fi
+  }
 function gitAddCommitPush() {
   BRANCH=$(gitBranch);
   if [[ "${BRANCH}" == *"master"* ]] || [[ "${BRANCH}" == *"main"* ]] || [[ "${BRANCH}" == *"release"* ]] || [[ "${BRANCH}" == *"develop"* ]];
@@ -188,12 +236,12 @@ function gitBranchCopy() { git branch --show-current | $CLIPBOARD; }
 function gitBranchCreate() { git checkout -b $*; }
 
 # editor functions
-function ij() { (cd ~/repos && idea $(ls | fzf)) ;}
-function io() { (cd ~/tmp && idea $(ls | fzf)) ;}
+function ij() { (cd ~/repos && idea "$(pwd)$(ls | fzf)") ; }
+function io() { (cd ~/tmp && idea "$(pwd)$(ls | fzf)") ; }
 
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
-function functions() { cat ~/.zsh_functions | grep function ;}
+function functions() { cat ~/.zsh_functions ~/.zsh_local/.* | grep function ;}
 function aliases() { cat ~/.zsh_aliases | grep alias ;}
 function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
 # improve this to filter out previous usages of hist
@@ -215,5 +263,5 @@ function backup() { (cd ~/Documents/cli && gitAddCommitPush $*) ;}
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
-function rgf() { rg --hidden $1 $2 -l | preview ;}
-function preview() { fzf --preview 'bat --style numbers,changes --color=always {}' ;}
+function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
+function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style numbers,changes --color=always {}' ;}

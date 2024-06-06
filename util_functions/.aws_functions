@@ -4,23 +4,45 @@
 # update this to keep session tokens out of version control using another local unlinked file
 # update the ensure this works across all OS (~/Documents/cli/.aws_functions is not universal)
 
-export AWS_PROFILE=
+export AWS_PROFILE=default
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
 export AWS_SESSION_TOKEN=
 
 export CODEARTIFACT_AUTH_TOKEN=
 
-function login-aws() {
-  aws sso login --profile=$AWS_PROFILE
-  aws-sso-cred-restore --profile $AWS_PROFILE
-  echo 'logging in to ecr'
-  aws ecr get-login-password --region us-east-1 --profile $AWS_PROFILE | docker login --username AWS --password-stdin $ECR_URL
-  gsed -i "/AWS_ACCESS_KEY_ID=/c export AWS_ACCESS_KEY_ID=`cat ~/.aws/credentials | grep aws_access_key_id | sed -n 's/aws_access_key_id = //p'`" ~/Documents/cli/.aws_functions
-  gsed -i "/AWS_SECRET_ACCESS_KEY=/c export AWS_SECRET_ACCESS_KEY=`cat ~/.aws/credentials | grep aws_secret_access_key | sed -n 's/aws_secret_access_key = //p'`" ~/Documents/cli/.aws_functions
-  gsed -i "/AWS_SESSION_TOKEN=/c export AWS_SESSION_TOKEN=`cat ~/.aws/credentials | grep aws_session_token | sed -n 's/aws_session_token = //p'`" ~/Documents/cli/.aws_functions
-  source ~/Documents/cli/.aws_functions && source ~/.zprofile
-  echo 'logging in to code artifact'
-  gsed -i "/CODEARTIFACT_AUTH_TOKEN=/c export $(printf "CODEARTIFACT_AUTH_TOKEN=%s" $(aws codeartifact get-authorization-token --domain happymoney --domain-owner 730502903637 --query authorizationToken --output text))" ~/Documents/cli/.aws_functions
-  source ~/Documents/cli/.aws_functions && source ~/.zprofile
+# function login-aws() {
+#   aws sso login --profile=$AWS_PROFILE
+#   aws-sso-cred-restore --profile $AWS_PROFILE
+#   echo 'logging in to ecr'
+#   aws ecr get-login-password --region us-east-1 --profile $AWS_PROFILE | docker login --username AWS --password-stdin $ECR_URL
+#   gsed -i "/AWS_ACCESS_KEY_ID=/c export AWS_ACCESS_KEY_ID=`cat ~/.aws/credentials | grep aws_access_key_id | sed -n 's/aws_access_key_id = //p'`" ~/Documents/cli/.aws_functions
+#   gsed -i "/AWS_SECRET_ACCESS_KEY=/c export AWS_SECRET_ACCESS_KEY=`cat ~/.aws/credentials | grep aws_secret_access_key | sed -n 's/aws_secret_access_key = //p'`" ~/Documents/cli/.aws_functions
+#   gsed -i "/AWS_SESSION_TOKEN=/c export AWS_SESSION_TOKEN=`cat ~/.aws/credentials | grep aws_session_token | sed -n 's/aws_session_token = //p'`" ~/Documents/cli/.aws_functions
+#   source ~/Documents/cli/.aws_functions && source ~/.zprofile
+#   echo 'logging in to code artifact'
+#   gsed -i "/CODEARTIFACT_AUTH_TOKEN=/c export $(printf "CODEARTIFACT_AUTH_TOKEN=%s" $(aws codeartifact get-authorization-token --domain happymoney --domain-owner 730502903637 --query authorizationToken --output text))" ~/Documents/cli/.aws_functions
+#   source ~/Documents/cli/.aws_functions && source ~/.zprofile
+# }
+
+function ec2-start() {
+    aws ec2 start-instances --instance-ids $(aws ec2 describe-instances --filters "Name=instance-type,Values=t2.micro" --query "Reservations[].Instances[].InstanceId" --output text)
 }
+
+function ec2-stop() {
+    aws ec2 stop-instances --instance-ids $(aws ec2 describe-instances --filters "Name=instance-type,Values=t2.micro" --query "Reservations[].Instances[].InstanceId" --output text)
+}
+
+function ec2-describe() {
+    aws ec2 describe-instances --filters "Name=instance-type,Values=t2.micro" --query "Reservations[].Instances[]" --output text | grep ASSOCIATION | awk 'NR==1{print $3}'
+}
+
+function open-proxy() {
+    ssh -i ~/.ssh/pubkey.pem ubuntu@$*
+}
+
+# function ec2-describe() {
+#     for i in $(printf %b $FILE)
+#     do git checkout $i 
+#     done
+# }
