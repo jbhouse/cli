@@ -102,7 +102,7 @@ function dockerContainerExec () {
 # git functions (need to handle ??)
 function gitDiff() {
   tmux new-session -d -s $(pwd)
-  if [[ $* == "V" ]] || [[ $* == "v" ]];
+  if [[ $* == "-V" ]] || [[ $* == "-v" ]];
     then 
       # Split vertically
       tmux split-window -h;
@@ -110,7 +110,7 @@ function gitDiff() {
       # Send the 'git' command to both panes
       tmux send-keys -t $(pwd):0.0 'gitDiffStaged' C-m;
       tmux send-keys -t $(pwd):0.1 'gitDiffUnstaged' C-m;
-    else 
+    else
       tmux rename-window "gitDiffStaged";
       tmux send-keys -t $(pwd):0 'gitDiffStaged' C-m;
 
