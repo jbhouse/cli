@@ -14,14 +14,7 @@
 function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
 function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*└── //' ;}
 
-function pipelines() {
-    if [ $# -eq 0 ];
-        then sh ~/Documents/cli/links/pipelines/$(ls ~/Documents/cli/links/pipelines | fzf);
-        else sh ~/Documents/cli/links/pipelines/$1.sh
-    fi
-}
-function crl() { sh ~/Documents/cli/curl/$(ls ~/Documents/cli/curl | fzf) $1 ;}
-function cc() { $* | $CLIPBOARD ;}
+function cc() { "$@" | $CLIPBOARD ;}
 function cpl() { fc -ln -1 | $CLIPBOARD ;}
 
 # maven functions
@@ -41,7 +34,7 @@ function containers() {
     --bind "ctrl-o:execute:${EDITOR:-vim} <(docker container logs {1}) > /dev/tty" \
     --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
     --bind "ctrl-x:execute:docker start {1} > /dev/null" \
-    --bind "ctrl-d:execute:docker rm {1} -v > /dev/null;" \
+    --bind "ctrl-d:execute:docker stop {1} && docker rm {1} -v > /dev/null;" \
     --bind "ctrl-p:execute:docker system prune > /dev/null" \
     --bind "ctrl-r:reload:docker ps -a" \
     --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
@@ -76,52 +69,62 @@ function images() {
     --header $'CTRL-S (stop all containers using image) | CTRL-D (delete image) | CTRL-P (prune images) | CTRL-R (reload)\n'
 }
 
-function stopContainersUsingImage() {
-  for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;
-}
+function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;}
 
 function dockerContainerStop() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container $(docker ps -a | grep $i | awk '{print $2}') is being stopped
+    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being stopped
     docker stop "$i" 1> /dev/null;
   done
 }
-function dockerContainerStart() {
+function dockerContainerRestart() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container $(docker ps -a | grep $i | awk '{print $2}') is being restarted
+    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being restarted
     docker restart "$i" 1> /dev/null;
   done
 }
-function dockerContainerTerminal () {
-  docker exec -ti $(docker ps -a | fzf | awk '{print $1}') /bin/sh
-}
-function dockerContainerExec () {
-  docker exec $(docker ps -a | fzf | awk '{print $1}') $*
-}
+function dockerContainerTerminal () { docker exec -ti "$(docker ps -a | fzf | awk '{print $1}')" /bin/sh ;}
+function dockerContainerExec () { docker exec "$(docker ps -a | fzf | awk '{print $1}')" $* ;}
 
 # git functions (need to handle ??)
+# diff all subdirectories
 function gitDiff() {
-  tmux new-session -d -s $(pwd)
-  if [[ $* == "V" ]] || [[ $* == "v" ]];
+  tmux new-session -d -s "$(pwd)"
+  ASET="false"
+  VSET="false"
+  while getopts 'av' flag; do
+    case "${flag}" in
+      a) ASET="true" ;;
+      v) VSET="true" ;;
+      *) print_usage
+        exit 1 ;;
+    esac
+  done
+  if [[ $VSET == "true" ]];
     then 
       # Split vertically
       tmux split-window -h;
 
       # Send the 'git' command to both panes
-      tmux send-keys -t $(pwd):0.0 'gitDiffStaged' C-m;
-      tmux send-keys -t $(pwd):0.1 'gitDiffUnstaged' C-m;
+      tmux send-keys -t "$(pwd)":0.0 'gitDiffStaged' C-m;
+      tmux send-keys -t "$(pwd)":0.1 'gitDiffUnstaged' C-m;
     else 
       tmux rename-window "gitDiffStaged";
-      tmux send-keys -t $(pwd):0 'gitDiffStaged' C-m;
+      tmux send-keys -t "$(pwd)":0 'gitDiffStaged' C-m;
 
       tmux new-window -n gitDiffUnstaged;
-      tmux send-keys -t $(pwd):1 'gitDiffUnstaged' C-m;
+      tmux send-keys -t "$(pwd)":1 'gitDiffUnstaged' C-m;
   fi
-  tmux attach-session -t $(pwd);
+  # tmux attach-session -t "$(pwd)";
+  if [[ $ASET == "true" ]];
+    then gitAdd ; git stash save -S "${@:2}" ;
+    tmux attach-session -t "$(pwd)";
+  fi
 }
+# shellcheck disable=SC2120
 function gitDiffUnstaged() {
-  preview="git diff $@ --color=always -- {-1}"
-  git diff $@ --name-only | fzf \
+  preview=( "git diff $@ --color=always -- {-1}" ) # array
+  git diff "$@" --name-only | fzf \
       -m --ansi \
       --bind "ctrl-o:execute:${EDITOR:-vim} {1} > /dev/tty" \
       --bind "ctrl-s:execute:git add {1} > /dev/null" \
@@ -132,19 +135,17 @@ function gitDiffUnstaged() {
       --header $'CTRL-O (open in editor) | CTRL-S (stage) | CTRL-E (revert changes) | CTRL-R (reload)\n'
 }
 function gitDiffStaged() {
-  preview="git diff --cached $@ --color=always -- {-1}"
-  git diff --cached $@ --name-only | fzf \
+  preview=( "git diff --cached $@ --color=always -- {-1}" )
+  git diff --cached "$@" --name-only | fzf \
     -m --ansi \
     --bind "ctrl-o:execute:${EDITOR:-vim} {1} > /dev/tty" \
     --bind "ctrl-s:execute:git restore --staged {1} > /dev/null" \
-    --bind "ctrl-r:reload:git diff --cached $@ --name-only" \
+    --bind "ctrl-r:reload:git diff --cached --name-only" \
     --bind "ctrl-e:execute:git stash push {1}" \
     --preview $preview \
     --prompt "staged changes >" \
     --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
 }
-function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
-function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -170,7 +171,6 @@ function gitStashDeleteStash() {
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gitAdd() { gitDiffUnstaged ;}
-# checkout if unstaged is porcelain
 function gitAddStash() {
   ISET="false"
   while getopts 'i' flag; do
@@ -210,30 +210,41 @@ function gitAddCommitPush() {
     else gitAddCommit $* ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
+
+# shellcheck disable=SC2120
 function gitBranchCheckout () {
   git fetch --prune
   git pull
-  if [[ `git status --porcelain` ]];
+  if [[ $(git status --porcelain) ]];
     then
-      echo 'commit or stash? c/s \n(default is to commit and check out a new branch)' ; read choice
-      if [ "$choice" = "stash" ] || [ "$choice" = "s" ];
-        then echo "stash message: " ; read message ; gitAddStash $message
-        else echo "commit message: " ; read message ; gitAddCommit $message
+      choice=$(printf "commit\nstash\nother" | fzf)
+      if [ "$choice" = "stash" ];
+        then echo "stash message: " ; read -r message ; gitAddStash "$message"
+      fi
+      if [ "$choice" = "commit" ];
+        then echo "commit message: " ; read -r message ; gitAddCommit "$message"
+      fi
+      if [ "$choice" = "other" ];
+        then return
       fi
       gitBranchCheckout
   else
     if [ -z "$1" ]
-      then git checkout $(git branch -r | sed "s|origin/||" | fzf)
-      else git checkout $1
+      then git switch "$(git branch -r | sed "s|origin/||" | sed 's/ //g' | fzf)"
+      else git switch "$1"
     fi
     git pull
   fi
 }
-
-function gitBranchDelete() { git branch -D $*; }
+function gitCheckoutHead() {
+	git checkout $1
+}
+function gitBranchDelete() { git branch -D "$@"; }
 function gitBranch() { git branch --show-current; }
 function gitBranchCopy() { git branch --show-current | $CLIPBOARD; }
-function gitBranchCreate() { git checkout -b $*; }
+function gitBranchCreate() { git checkout -b "$@"; }
+function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
+function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
 
 # editor functions
 function ij() { (cd ~/repos && idea "$(pwd)$(ls | fzf)") ; }
@@ -242,7 +253,7 @@ function io() { (cd ~/tmp && idea "$(pwd)$(ls | fzf)") ; }
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
 function functions() { cat ~/.zsh_functions ~/.zsh_local/.* | grep function ;}
-function aliases() { cat ~/.zsh_aliases | grep alias ;}
+function aliases() { grep alias ~/.zsh_aliases ;}
 function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
 # improve this to filter out previous usages of hist
 function hist() {
