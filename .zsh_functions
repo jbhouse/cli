@@ -237,7 +237,7 @@ function gitBranchCheckout () {
   fi
 }
 function gitCheckoutHead() {
-	git checkout $1
+	git switch "$(git remote show origin | grep HEAD | sed -n '/:/s/ HEAD branch: //p')"
 }
 function gitBranchDelete() { git branch -D "$@"; }
 function gitBranch() { git branch --show-current; }
