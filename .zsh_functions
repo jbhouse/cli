@@ -41,7 +41,7 @@ function containers() {
     --bind "ctrl-o:execute:${EDITOR:-vim} <(docker container logs {1}) > /dev/tty" \
     --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
     --bind "ctrl-x:execute:docker start {1} > /dev/null" \
-    --bind "ctrl-d:execute:docker rm {1} -v > /dev/null;" \
+    --bind "ctrl-d:execute:docker stop {1} && docker rm {1} -v > /dev/null;" \
     --bind "ctrl-p:execute:docker system prune > /dev/null" \
     --bind "ctrl-r:reload:docker ps -a" \
     --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
@@ -143,8 +143,8 @@ function gitDiffStaged() {
     --prompt "staged changes >" \
     --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
 }
-function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
-function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)$(ls | fzf)") ;}
+function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
+function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -209,6 +209,9 @@ function gitAddCommitPush() {
       fi
     else gitAddCommit $* ; git push --set-upstream origin ${BRANCH} ;
   fi
+}
+function gitSwitchHead() {
+  git switch "$(git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p')"
 }
 function gitBranchCheckout () {
   git fetch --prune
