@@ -33,6 +33,8 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
+source ~/.functions
+source ~/.aliases
 source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
 bindkey '^I' fzf_completion
 # source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_latte-zsh-syntax-highlighting.zsh
@@ -46,6 +48,7 @@ bindkey '^I' fzf_completion
 # source "/usr/local/opt/fzf/shell/completion.zsh"
 # source "/usr/local/opt/fzf/shell/key-bindings.zsh"
 if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
+if [[ ! -z ~/.zsh_optional ]]; then ; for i in ~/.zsh_optional/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # disable sort when completing `git checkout`

@@ -2,6 +2,7 @@
 
 mv ~/.zshrc ~/.zshrc.bak
 mkdir ~/.zsh_local
+mkdir ~/.zsh_optional
 
 echo '----------------------------'
 echo "OS selection"
@@ -27,10 +28,9 @@ if [[ "$distro" == *"W"* ]] || [[ "$distro" == *"w"* ]];
     PACKAGE_MANAGER='sudo apt install -y'
 fi
 
-# ln -s $(pwd)/$OS_NAME/.env_vars ~/.zsh_local/.env_vars # this should not be linked to zsh_local
-ln -s $(pwd)/$OS_NAME/.functions ~/.zsh_local/.functions
+ln -s $(pwd)/$OS_NAME/.functions ~/.functions
 if [ -f $(pwd)/$OS_NAME/.aliases ]
-  then ln -s $(pwd)/$OS_NAME/.aliases ~/.zsh_local/.aliases
+  then ln -s $(pwd)/$OS_NAME/.aliases ~/.aliases
 fi
 ln -s "$(pwd)"/$OS_NAME/.env_vars ~/.zsh_env
 ln -s "$(pwd)"/$OS_NAME/.zprofile ~/.zprofile
@@ -61,7 +61,7 @@ read aws_func
 # need to create ~/.aws
 
 if [[ "${aws_func}" == "Y" ]] || [[ "${aws_func}" == "y" ]]
-  then ln -s "$(pwd)"/util_functions/.aws_functions ~/.zsh_local/.aws_functions
+  then ln -s "$(pwd)"/util_functions/.aws_functions ~/.zsh_optional/.aws_functions
 fi
 
 echo
@@ -72,7 +72,7 @@ read kafka_func
 echo
 
 if [[ "${kafka_func}" == "Y" ]] || [[ "${kafka_func}" == "y" ]]
-  then ln -s "$(pwd)"/util_functions/.kafka_functions ~/.zsh_local/.kafka_functions
+  then ln -s "$(pwd)"/util_functions/.kafka_functions ~/.zsh_optional/.kafka_functions
   brew install kafka
 fi
 
