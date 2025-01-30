@@ -35,6 +35,7 @@ source ~/.zsh_aliases
 source ~/.zsh_functions
 source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
 bindkey '^I' fzf_completion
+# source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_latte-zsh-syntax-highlighting.zsh
 # source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_frappe-zsh-syntax-highlighting.zsh
 # source ~/.oh-my-zsh/custom/scripts/fzf-git.sh
 

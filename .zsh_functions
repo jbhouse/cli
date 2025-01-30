@@ -266,5 +266,5 @@ function backup() { (cd ~/Documents/cli && gitAddCommitPush $*) ;}
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
-function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
-function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
+function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style=default --color=always {}' ;}
+function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style=default --color=always {}' ;}

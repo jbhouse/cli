@@ -12,6 +12,7 @@ function publishKafkaMessage() {
   done
    echo "publishing $HOME/Documents/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
   jq -rc . "$HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+  # to publish yourself, echo "{}" | | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
 # need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
 function consumeKafkaMessage() {
