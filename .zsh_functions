@@ -89,26 +89,16 @@ function dockerContainerExec () { docker exec "$(docker ps -a | fzf | awk '{prin
 # git functions (need to handle ??)
 # diff all subdirectories
 function gitDiff() {
-  tmux new-session -d -s "$(pwd)"
-  ASET="false"
-  VSET="false"
-  while getopts 'av' flag; do
-    case "${flag}" in
-      a) ASET="true" ;;
-      v) VSET="true" ;;
-      *) print_usage
-        exit 1 ;;
-    esac
-  done
-  if [[ $VSET == "true" ]];
+  tmux new-session -d -s $(pwd)
+  if [[ $* == "-V" ]] || [[ $* == "-v" ]];
     then 
       # Split vertically
       tmux split-window -h;
 
       # Send the 'git' command to both panes
-      tmux send-keys -t "$(pwd)":0.0 'gitDiffStaged' C-m;
-      tmux send-keys -t "$(pwd)":0.1 'gitDiffUnstaged' C-m;
-    else 
+      tmux send-keys -t $(pwd):0.0 'gitDiffStaged' C-m;
+      tmux send-keys -t $(pwd):0.1 'gitDiffUnstaged' C-m;
+    else
       tmux rename-window "gitDiffStaged";
       tmux send-keys -t "$(pwd)":0 'gitDiffStaged' C-m;
 
@@ -146,6 +136,8 @@ function gitDiffStaged() {
     --prompt "staged changes >" \
     --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
 }
+function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
+function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -210,8 +202,9 @@ function gitAddCommitPush() {
     else gitAddCommit $* ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
-
-# shellcheck disable=SC2120
+function gitSwitchHead() {
+  git switch "$(git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p')"
+}
 function gitBranchCheckout () {
   git fetch --prune
   git pull
@@ -274,5 +267,5 @@ function backup() { (cd ~/Documents/cli && gitAddCommitPush $*) ;}
 # searching functions
 function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
-function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
-function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style numbers,changes --color=always {}' ;}
+function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style=default --color=always {}' ;}
+function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style=default --color=always {}' ;}

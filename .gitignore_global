@@ -166,7 +166,7 @@ out/
 *.iml
 *.ipr
 *.iws
-.run/
+# .run/
 htmlReport
 
 ##############################

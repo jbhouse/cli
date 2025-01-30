@@ -1,24 +1,49 @@
 #!/bin/bash
 
-function cube-describe() {
-    if [ ! -z "$1" ]
-        then RN=$1
-        else RN=$(printf "po\npl" | fzf)
+function allLogsFor() {
+  pane=0
+  window=0
+  for pod in $(cube-all-pods $1); do
+    if [ $pane == 0 ]; then tmux new-session -d -s $1;
+      else
+        n=$(($pane%5))
+        if [ $n == 0 ];
+          then
+            ((window++));
+            pane=0;
+            tmux new-window -t $1:$window;
+          else
+            tmux split-window -h;
+        fi
+        tmux send-keys -t $1:$window.$pane "kubectl -n $KNS --kubeconfig=$KUBECONFIG logs -f $pod" C-m;
     fi
-    RESOURCE=$(cube get $RN | fzf | awk '{ print $1 }')
-    cube describe $RN $RESOURCE
+    ((pane++))
+  done
+  tmux select-layout -t $1:0 tiled
+  tmux attach -t $1
 }
 
-function cube-delete() { cube delete po $(cube-get-pod) ;}
 
-function cube-logs() { cube logs $* $(cube-get-pod) ;}
+function hlm() { cube-configure; helm -n $KNS --kubeconfig=$KUBECONFIG $* ;}
+
+function cube-describe() {
+  cube describe po $(cube get po | fzf | awk '{ print $1 }')
+}
+
+function cube-delete() {
+    if [ ! -z "$1" ]
+        then cube delete po $1;
+        else cube delete po $(cube-get-pod);
+    fi
+}
+
+function cube-logs() { cube logs $* $(cube-get-pod); }
 
 function cube-configure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then senv ; fi ; }
 
 function cube() {
-    cube-configure
-#    echo "kubectl -n $KNS --kubeconfig=$KUBECONFIG $*"
-    kubectl -n $KNS --kubeconfig=$KUBECONFIG $*
+  cube-configure;
+  kubectl -n $KNS --kubeconfig=$KUBECONFIG $*;
 }
 
 function cube-scale() {
@@ -34,7 +59,7 @@ function cube-exec() { cube exec $(cube-get-pod) -- $* ;}
 function cube-terminal() {
     if [ ! -z "$1" ]
         then cube exec "$1" -it -- /bin/sh
-        else cube exec $(cube-get-pod) -it -- bash
+        else cube exec $(cube-get-pod) -it -- /bin/sh
     fi
 }
 
@@ -47,6 +72,14 @@ function cube-all-pods() {
 
 function cube-get-pod() { cube get po | awk '{ print $1 }' | fzf ;}
 
+function senv() {
+    ENV_NAME=$(ls ~/.kube | fzf)
+#    rm ~/.kube/config; ln -s ~/.kube/$ENV_NAME ~/.kube/config
+    KUBECONFIG=~/.kube/$ENV_NAME
+    KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
+#    KNS=$(kubectl get namespaces | awk '{print $1}' | fzf)
+}
+
 function pods() {
   cube get po | fzf \
     --bind "ctrl-o:execute:${EDITOR:-vim} <(kubectl logs --all-containers --kubeconfig=$KUBECONFIG -n $KNS {1}) > /dev/tty" \
@@ -55,7 +88,25 @@ function pods() {
     --preview-window up \
     --preview "kubectl --kubeconfig=$KUBECONFIG logs -n $KNS {1}" \
     --info=inline --header-lines=1 \
-    --prompt "$(kubectl config current-context | sed 's/-context$//')> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
     --header $'╱ CTRL-O (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 #    --bind "enter:execute:kubectl exec -it --kubeconfig=$KUBECONFIG -n $KNS {1} -- /bin/sh > /dev/tty"
+}
+
+function update_ps1() { PS1="kubectl --kubeconfig=$KUBECONFIG -n $KNS \n> " ;}
+
+PROMPT_COMMAND=update_ps1
+
+# tmux functions
+function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
+function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
+function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
+
+# function hist() { num=$(history | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); eval $num ;}
+function hist() {
+  if [ ! -z "$1" ]
+    then num=$(history | sort -rn | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g');
+    else num=$(history | sort -rn | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g');
+  fi
+  eval $num;
 }
