@@ -48,4 +48,6 @@ if [[ "${install21}" == "Y" ]] || [[ "${install21}" == "y" ]]
   # m1
 fi
 
+brew install gawk grep gnu-sed coreutils
+
 softwareupdate --install-rosetta

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 mv ~/.zshrc ~/.zshrc.bak
-mkdir ~/.zsh_local
 mkdir ~/.zsh_optional
 
 echo '----------------------------'
@@ -46,7 +45,7 @@ echo 'creating symlinks'
 echo '----------------------------'
 
 ln -s "$(pwd)"/.gitignore_global ~/.gitignore_global
-ln -s "$(pwd)"/.config ~/.config
+for i in $(ls "$(pwd)"/.config); do; ln -s "$(pwd)"/.config/${i} ~/.config; done;
 ln -s "$(pwd)"/.tmux.conf ~/.tmux.conf
 ln -s "$(pwd)"/.zshrc ~/.zshrc
 ln -s "$(pwd)"/.zsh_aliases ~/.zsh_aliases
@@ -57,8 +56,6 @@ echo '----------------------------'
 echo 'symlink aws functions? (y/Y) or (n/N)'
 echo '----------------------------'
 read aws_func
-
-# need to create ~/.aws
 
 if [[ "${aws_func}" == "Y" ]] || [[ "${aws_func}" == "y" ]]
   then ln -s "$(pwd)"/util_functions/.aws_functions ~/.zsh_optional/.aws_functions
@@ -121,11 +118,12 @@ echo 'installing software packages'
 echo '----------------------------'
 $PACKAGE_MANAGER zsh
 (cd ~ && sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)")
-echo '----------------------------'
-echo "installing fzf-tab. may still be broken on most recent release"
-echo "may need to undo commits from main. Do so at ~/.oh-my-zsh/custom/plugins/fzf-tab"
-echo '----------------------------'
-git clone https://github.com/Aloxaf/fzf-tab ~/.oh-my-zsh/custom/plugins/fzf-tab
+# echo '----------------------------'
+# echo "installing fzf-tab. may still be broken on most recent release"
+# echo "may need to undo commits from main. Do so at ~/.oh-my-zsh/custom/plugins/fzf-tab"
+# echo '----------------------------'
+# git clone https://github.com/Aloxaf/fzf-tab ~/.oh-my-zsh/custom/plugins/fzf-tab
+# git clone https://github.com/lincheney/fzf-tab-completion.git ~/.oh-my-zsh/custom/plugins/fzf-tab-completion
 # git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 $PACKAGE_MANAGER micro
 $PACKAGE_MANAGER maven

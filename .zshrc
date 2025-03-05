@@ -25,18 +25,12 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Which plugins would you like to load?
 # Standard plugins can be found in $ZSH/plugins/
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# plugins=(git zsh-autosuggestions)
-# plugins=(git fzf-tab)
-plugins=(git fzf-tab zsh-autosuggestions)
+plugins=(git zsh-autosuggestions zsh-interactive-cd)
+# plugins=(git fzf-tab zsh-autosuggestions)
+# bindkey '^I' fzf_completion
 
 source ~/.oh-my-zsh/oh-my-zsh.sh
-source ~/.zsh_env
-source ~/.zsh_aliases
-source ~/.zsh_functions
-source ~/.functions
-source ~/.aliases
-source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
-bindkey '^I' fzf_completion
+# source ~/.oh-my-zsh/custom/plugins/fzf-tab-completion/zsh/fzf-zsh-completion.sh
 # source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_latte-zsh-syntax-highlighting.zsh
 # source ~/.oh-my-zsh/custom/zsh-syntax-highlighting/themes/catppuccin_frappe-zsh-syntax-highlighting.zsh
 # source ~/.oh-my-zsh/custom/scripts/fzf-git.sh
@@ -45,9 +39,16 @@ bindkey '^I' fzf_completion
   # bindkey '^I' fzf_completion
   # these two were needed on intel mbp
 
-# source "/usr/local/opt/fzf/shell/completion.zsh"
-# source "/usr/local/opt/fzf/shell/key-bindings.zsh"
-if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.*; do source $i; done ; fi
+# source "/opt/homebrew/opt/fzf/shell/completion.zsh"
+source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
+source ~/.zsh_env
+source ~/.zsh_aliases
+source ~/.zsh_functions
+source ~/.functions
+if [ -f ~/.aliases ]
+  then source ~/.aliases
+fi
+if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.local*; do source $i; done ; fi
 if [[ ! -z ~/.zsh_optional ]]; then ; for i in ~/.zsh_optional/.*; do source $i; done ; fi
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
@@ -57,18 +58,6 @@ zstyle ':completion:*:git-checkout:*' sort false
 zstyle ':completion:*:descriptions' format '[%d]'
 # set list-colors to enable filename colorizing
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
-# preview directory's content with exa when completing cd
-# zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
-zstyle ':fzf-tab:complete:*:*' fzf-preview 'less ${(Q)realpath}'
-# To make fzf-tab follow FZF_DEFAULT_OPTS.
-# NOTE: This may lead to unexpected behavior since some flags break this plugin. See Aloxaf/fzf-tab#455.
-# zstyle ':fzf-tab:*' use-fzf-default-opts yes
-# switch group using `<` and `>`
-zstyle ':fzf-tab:*' switch-group '<' '>'
-# zstyle ':fzf-tab:*' switch-group ',' '.'
-
-# zstyle ':completion:*' fzf-search-display true
-# needed on intel?^
 
 # User configuration
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -111,5 +100,3 @@ export FZF_CTRL_R_OPTS="
   --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
   --color header:italic
   --header 'Press CTRL-Y to copy command into clipboard'"
-
-eval "$(fzf --zsh)"

@@ -23,26 +23,31 @@ function mid() { mvn -pl "$@" -amd clean install ;}
 
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
-function smux() { PROJECT=$(ls ~/.config/tmuxinator | sed 's/[.].*$//' | fzf) ; if [ ! -z "$PROJECT" ]; then tmuxinator start $PROJECT; fi ;}
+function smux() { PROJECT=$(ls ~/.config/tmuxinator/ | sed 's/[.].*$//' | fzf) ; if [ ! -z "$PROJECT" ]; then tmuxinator start $PROJECT; fi ;}
 function mux() { if [ $# -eq 0 ]; then smux ; else tmuxinator start $*; fi ;}
 function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
 function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
 function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
 
 function containers() {
-  docker ps -a | fzf \
+  docker ps -a --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}' | fzf \
     --bind "ctrl-o:execute:${EDITOR:-vim} <(docker container logs {1}) > /dev/tty" \
     --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
     --bind "ctrl-x:execute:docker start {1} > /dev/null" \
     --bind "ctrl-d:execute:docker stop {1} && docker rm {1} -v > /dev/null;" \
     --bind "ctrl-p:execute:docker system prune > /dev/null" \
-    --bind "ctrl-r:reload:docker ps -a" \
+    --bind 'ctrl-z:transform:[[ ! {fzf:prompt} =~ ALL ]] &&
+              echo "change-prompt(ALL > )+reload(docker ps -a --format \"table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}\")" ||
+              echo "change-prompt(ACTIVE > )+reload(docker ps --format \"table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}\")"' \
+    --bind 'ctrl-r:reload:[[ ! {fzf:prompt} =~ ALL ]] &&
+              docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}" ||
+              docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"' \
     --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
     --info=inline --layout=reverse --header-lines=1 \
     --preview-window 'up,70%,border-bottom,+{2}+3/3,~3' \
     --preview "docker container logs {1}" \
-    --prompt "containers >" \
-    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container) | CTRL-P (prune system) | CTRL-R (reload) | ENTER (exec into container)\n'
+    --prompt "docker ps -a >" \
+    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container) | CTRL-P (prune system) | CTRL-R (reload) | CTRL-Z (toggle between all or active containers) | ENTER (exec into container)\n'
 }
 
 function networks() {
@@ -71,20 +76,17 @@ function images() {
 
 function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;}
 
-function dockerContainerStop() {
+function dockerContainerStart() { dockerCommand start }
+function dockerContainerStop() { dockerCommand stop }
+function dockerContainerRestart() { dockerCommand restart }
+function dockerCommand() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being stopped
-    docker stop "$i" 1> /dev/null;
+    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being "$@"ed
+    docker "$@" "$i" 1> /dev/null;
   done
 }
-function dockerContainerRestart() {
-  for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being restarted
-    docker restart "$i" 1> /dev/null;
-  done
-}
-function dockerContainerTerminal () { docker exec -ti "$(docker ps -a | fzf | awk '{print $1}')" /bin/sh ;}
-function dockerContainerExec () { docker exec "$(docker ps -a | fzf | awk '{print $1}')" $* ;}
+function dockerContainerTerminal () { docker exec -ti "$(docker ps | fzf | awk '{print $1}')" /bin/sh ;}
+function dockerContainerExec () { docker exec "$(docker ps | fzf | awk '{print $1}')" $* ;}
 
 # git functions (need to handle ??)
 # diff all subdirectories
@@ -136,8 +138,6 @@ function gitDiffStaged() {
     --prompt "staged changes >" \
     --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
 }
-function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
-function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
   if [ ! -z "$FILE" ]
@@ -153,7 +153,7 @@ function gitFileUnstage() {
   fi
 }
 function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
-function gitStashDeleteStash() {
+function gitStashDelete() {
   STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
   echo "$STASHES"
   if [ ! -z "$STASHES" ];
@@ -202,10 +202,9 @@ function gitAddCommitPush() {
     else gitAddCommit $* ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
-function gitSwitchHead() {
-  git switch "$(git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p')"
-}
-function gitBranchCheckout () {
+function gitHead() { git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p' }
+function gitSwitchHead() { git switch "$(gitHead)" && git pull }
+function gitSwitchBranch () {
   git fetch --prune
   git pull
   if [[ $(git status --porcelain) ]];
@@ -220,7 +219,7 @@ function gitBranchCheckout () {
       if [ "$choice" = "other" ];
         then return
       fi
-      gitBranchCheckout
+      gitSwitchBranch
   else
     if [ -z "$1" ]
       then git switch "$(git branch -r | sed "s|origin/||" | sed 's/ //g' | fzf)"
@@ -229,19 +228,19 @@ function gitBranchCheckout () {
     git pull
   fi
 }
-function gitCheckoutHead() {
-	git switch "$(git remote show origin | grep HEAD | sed -n '/:/s/ HEAD branch: //p')"
-}
-function gitBranchDelete() { git branch -D "$@"; }
+# function gitSwitchBranch() {
+# 	git switch "$(git remote show origin | grep HEAD | sed -n '/:/s/ HEAD branch: //p')"
+# }
 function gitBranch() { git branch --show-current; }
-function gitBranchCopy() { git branch --show-current | $CLIPBOARD; }
-function gitBranchCreate() { git checkout -b "$@"; }
+function gitDeleteBranch() { git branch -D "$@"; }
+function gitCopyBranch() { git branch --show-current | $CLIPBOARD; }
+function gitCreateBranch() { git checkout -b "$@"; }
 function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
-function tclone() { (cd ~/tmp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
+function tclone() { (cd ~/temp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
 
 # editor functions
 function ij() { (cd ~/repos && idea "$(pwd)$(ls | fzf)") ; }
-function io() { (cd ~/tmp && idea "$(pwd)$(ls | fzf)") ; }
+function io() { (cd ~/temp && idea "$(pwd)$(ls | fzf)") ; }
 
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
