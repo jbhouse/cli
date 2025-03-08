@@ -20,7 +20,7 @@ function cpl() { fc -ln -1 | $CLIPBOARD ;}
 # maven functions
 function mist() { mvn -T 1C clean install "$@" -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
 function mid() { mvn -pl "$@" -amd clean install ;}
-function msv() { mvn versions:set -DnewVersion="$@" }
+function msv() { mvn versions:set -DnewVersion="$*" ;}
 
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
@@ -75,14 +75,14 @@ function images() {
     --header $'CTRL-S (stop all containers using image) | CTRL-D (delete image) | CTRL-P (prune images) | CTRL-R (reload)\n'
 }
 
-function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do ; echo "docker stop $i"; done;}
+function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do echo "docker stop $i"; done;}
 
-function dockerContainerStart() { dockerCommand start }
-function dockerContainerStop() { dockerCommand stop }
-function dockerContainerRestart() { dockerCommand restart }
+function dockerContainerStart() { dockerCommand start ;}
+function dockerContainerStop() { dockerCommand stop ;}
+function dockerContainerRestart() { dockerCommand restart ;}
 function dockerCommand() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being "$@"ed
+    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being "$*"ed
     docker "$@" "$i" 1> /dev/null;
   done
 }
@@ -204,9 +204,9 @@ function gitAddCommitPush() {
     else gitAddCommit $* ; git push --set-upstream origin ${BRANCH} ;
   fi
 }
-function gitHead() { git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p' }
-function gitPullOriginHead() { git pull origin $(gitHead) }
-function gitSwitchHead() { git switch "$(gitHead)" && git pull }
+function gitHead() { git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p' ;}
+function gitPullOriginHead() { git pull origin $(gitHead) ;}
+function gitSwitchHead() { git switch "$(gitHead)" && git pull ;}
 function gitSwitchBranch () {
   git fetch --prune
   git pull

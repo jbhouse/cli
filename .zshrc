@@ -44,12 +44,15 @@ source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
 source ~/.zsh_env
 source ~/.zsh_aliases
 source ~/.zsh_functions
-source ~/.functions
+if [ -f ~/.functions ]
+  then source ~/.functions
+fi
 if [ -f ~/.aliases ]
   then source ~/.aliases
 fi
-if [[ ! -z ~/.zsh_local ]]; then ; for i in ~/.zsh_local/.local*; do source $i; done ; fi
-if [[ ! -z ~/.zsh_optional ]]; then ; for i in ~/.zsh_optional/.*; do source $i; done ; fi
+if [ -d ~/.zsh_local ]; then ; for i in ~/.zsh_local/.local*; do source $i; done ; fi
+if [ -d ~/.zsh_optional ]; then ; for i in ~/.zsh_optional/.*; do source $i; done ; fi
+
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # disable sort when completing `git checkout`
