@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function publishKafkaMessage() {
+function kafkaPublishMessage() {
   source ~/.zsh_env;
   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   while getopts 'e' flag; do
@@ -12,10 +12,10 @@ function publishKafkaMessage() {
   done
    echo "publishing $HOME/Documents/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
   jq -rc . "$HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
-  # to publish yourself, echo "{}" | | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+  # to publish yourself, echo "{}" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
 # need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
-function consumeKafkaMessage() {
+function kafkaConsumeMessage() {
   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   echo "consuming from $TOPIC_NAME"
   source ~/.zsh_env;
@@ -23,10 +23,10 @@ function consumeKafkaMessage() {
   kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@"
 }
 
-function consumeKafkaMessageFormatted() {
-  TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
-  echo "consuming from $TOPIC_NAME"
-  source ~/.zsh_env;
-  echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@ | jq"
-  kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@" | jq
-}
+# function consumeKafkaMessageFormatted() {
+#   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+#   echo "consuming from $TOPIC_NAME"
+#   source ~/.zsh_env;
+#   echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@ | jq"
+#   kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@" | jq
+# }

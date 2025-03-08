@@ -20,6 +20,7 @@ function cpl() { fc -ln -1 | $CLIPBOARD ;}
 # maven functions
 function mist() { mvn -T 1C clean install "$@" -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
 function mid() { mvn -pl "$@" -amd clean install ;}
+function msv() { mvn versions:set -DnewVersion="$@" }
 
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
@@ -92,9 +93,9 @@ function dockerContainerExec () { docker exec "$(docker ps | fzf | awk '{print $
 # diff all subdirectories
 function gitDiff() {
   tmux new-session -d -s $(pwd)
-  if [[ $* == "-V" ]] || [[ $* == "-v" ]];
+  if [[ $* == "-H" ]] || [[ $* == "-h" ]];
     then 
-      # Split vertically
+      # Split horizonatally
       tmux split-window -h;
 
       # Send the 'git' command to both panes
@@ -107,11 +108,7 @@ function gitDiff() {
       tmux new-window -n gitDiffUnstaged;
       tmux send-keys -t "$(pwd)":1 'gitDiffUnstaged' C-m;
   fi
-  # tmux attach-session -t "$(pwd)";
-  if [[ $ASET == "true" ]];
-    then gitAdd ; git stash save -S "${@:2}" ;
-    tmux attach-session -t "$(pwd)";
-  fi
+  tmux attach-session -t "$(pwd)";
 }
 # shellcheck disable=SC2120
 function gitDiffUnstaged() {
@@ -154,12 +151,17 @@ function gitFileUnstage() {
 }
 function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
 function gitStashDelete() {
-  STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
-  echo "$STASHES"
-  if [ ! -z "$STASHES" ];
-    then for i in $(printf %b "$STASHES"); do git stash drop "$i"; done;
+  STASH=$(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
+  if [ ! -z "$STASH" ];
+    then git stash drop "$STASH";
     else echo 'no stashes select or dropped';
   fi
+  # STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
+  # echo "$STASHES"
+  # if [ ! -z "$STASHES" ];
+  #   then for i in $(printf %b "$STASHES"); do git stash drop "$i"; done;
+  #   else echo 'no stashes select or dropped';
+  # fi
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gitAdd() { gitDiffUnstaged ;}
@@ -203,6 +205,7 @@ function gitAddCommitPush() {
   fi
 }
 function gitHead() { git branch -r | grep HEAD | sed -n 's/  origin\/HEAD -> origin\///p' }
+function gitPullOriginHead() { git pull origin $(gitHead) }
 function gitSwitchHead() { git switch "$(gitHead)" && git pull }
 function gitSwitchBranch () {
   git fetch --prune
