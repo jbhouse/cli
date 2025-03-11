@@ -30,3 +30,7 @@ function kafkaConsumeMessage() {
 #   echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@ | jq"
 #   kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@" | jq
 # }
+
+# function kafkaPublishToPartition() {
+  # echo "{}" | kafka-console-producer --broker-list localhost:9092 --topic mdpo-topic --property "partitioner.class=org.apache.kafka.clients.producer.internals.DefaultPartitioner" --property "key=anyKey" --property "partition=$@"
+# }
