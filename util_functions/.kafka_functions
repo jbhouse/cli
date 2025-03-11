@@ -1,22 +1,24 @@
 #!/bin/bash
 
 function kafkaPublishMessage() {
+  # list topics, then check if json payload exists, otherwise enter input
   source ~/.zsh_env;
-  TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+  TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   while getopts 'e' flag; do
     case "${flag}" in
-      e) micro ~/Documents/kafka_messages/"$TOPIC_NAME".json ;;
+      e) micro ~/.zsh_local/kafka_messages/"$TOPIC_NAME".json ;;
       *) print_usage
         exit 1 ;;
     esac
   done
-   echo "publishing $HOME/Documents/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
-  jq -rc . "$HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+   echo "publishing ~/.zsh_local/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
+  jq -rc . "~HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
   # to publish yourself, echo "{}" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
-# need to first check for the existence of path: ~/Documents/kafka_messages/kafka_map.json
+# need to first check for the existence of path: ~/.zsh_local/kafka_messages/kafka_map.json
 function kafkaConsumeMessage() {
-  TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+  # list topics | fzf
+  TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   echo "consuming from $TOPIC_NAME"
   source ~/.zsh_env;
   echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@"
@@ -24,7 +26,7 @@ function kafkaConsumeMessage() {
 }
 
 # function consumeKafkaMessageFormatted() {
-#   TOPIC_NAME=$(jq < ~/Documents/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
+#   TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
 #   echo "consuming from $TOPIC_NAME"
 #   source ~/.zsh_env;
 #   echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@ | jq"
