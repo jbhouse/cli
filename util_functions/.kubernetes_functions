@@ -79,6 +79,35 @@ function senv() {
 #    KNS=$(kubectl get namespaces | awk '{print $1}' | fzf)
 }
 
+function cube-control() {
+  tmux new-session -d -s "cube-control";
+  tmux rename-window "pods";
+  tmux send-keys -t "cube-control":"pods" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"pods" "pods" C-m;
+
+  tmux new-window -t "cube-control":1;
+  tmux rename-window "services";
+  tmux send-keys -t "cube-control":"services" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"services" "services" C-m;
+
+  tmux new-window -t "cube-control":2;
+  tmux rename-window "deployments";
+  tmux send-keys -t "cube-control":"deployments" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"deployments" "deployments" C-m;
+
+  tmux new-window -t "cube-control":3;
+  tmux rename-window "statefulsets";
+  tmux send-keys -t "cube-control":"statefulsets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"statefulsets" "statefulsets" C-m;
+
+  tmux new-window -t "cube-control":4;
+  tmux rename-window "replicasets";
+  tmux send-keys -t "cube-control":"replicasets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"replicasets" "replicasets" C-m;
+
+  tmux attach -t "cube-control";
+}
+
 function pods() {
   cube get po | fzf \
     --bind "ctrl-o:execute:${EDITOR:-vim} <(kubectl logs --all-containers --kubeconfig=$KUBECONFIG -n $KNS {1}) > /dev/tty" \
@@ -90,6 +119,54 @@ function pods() {
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
     --header $'╱ CTRL-O (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 #    --bind "enter:execute:kubectl exec -it --kubeconfig=$KUBECONFIG -n $KNS {1} -- /bin/sh > /dev/tty"
+}
+
+function services() {
+  cube get services | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit services/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete services {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get services" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get services {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function deployments() {
+  cube get deployments | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit deployment/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete deployment {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function statefulsets() {
+  cube get statefulsets | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit statefulset/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete statefulset {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function replicasets() {
+  cube get replicasets | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit replicaset/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete replicaset {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function update_ps1() { PS1="kubectl --kubeconfig=$KUBECONFIG -n $KNS \n> " ;}
