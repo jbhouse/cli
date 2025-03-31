@@ -15,8 +15,8 @@ function allLogsFor() {
           else
             tmux split-window -h;
         fi
-        tmux send-keys -t $1:$window.$pane "kubectl -n $KNS --kubeconfig=$KUBECONFIG logs -f $pod" C-m;
     fi
+    tmux send-keys -t $1:$window.$pane "kubectl -n $KNS --kubeconfig=$KUBECONFIG logs -f $pod" C-m;
     ((pane++))
   done
   tmux select-layout -t $1:0 tiled
