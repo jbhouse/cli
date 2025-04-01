@@ -105,6 +105,21 @@ function cube-control() {
   tmux send-keys -t "cube-control":"replicasets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
   tmux send-keys -t "cube-control":"replicasets" "replicasets" C-m;
 
+  tmux new-window -t "cube-control":5;
+  tmux rename-window "configmaps";
+  tmux send-keys -t "cube-control":"configmaps" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"configmaps" "configmaps" C-m;
+
+  tmux new-window -t "cube-control":6;
+  tmux rename-window "secrets";
+  tmux send-keys -t "cube-control":"secrets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"secrets" "secrets" C-m;
+
+  tmux new-window -t "cube-control":7;
+  tmux rename-window "ingress";
+  tmux send-keys -t "cube-control":"ingress" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cube-control":"ingress" "ingress" C-m;
+
   tmux attach -t "cube-control";
 }
 
@@ -130,7 +145,7 @@ function services() {
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get services {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
-    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function deployments() {
@@ -142,7 +157,7 @@ function deployments() {
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
-    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function statefulsets() {
@@ -154,7 +169,7 @@ function statefulsets() {
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
-    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function replicasets() {
@@ -166,7 +181,43 @@ function replicasets() {
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
-    --header $'╱ CTRL-E (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function configmaps() {
+  cube get configmaps | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit configmap/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete configmap {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get configmaps" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get configmaps {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function secrets() {
+  cube get secrets | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit secret/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete secret {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get secrets" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get secrets {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function ingress() {
+  cube get ingress | fzf \
+    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit ingress/{1} -o yaml" \
+    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete ingress {1}" \
+    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get ingress" \
+    --preview-window up \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get ingress {1} -o yaml" \
+    --info=inline --header-lines=1 \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function update_ps1() { PS1="kubectl --kubeconfig=$KUBECONFIG -n $KNS \n> " ;}
