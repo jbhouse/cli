@@ -20,7 +20,15 @@ function cpl() { fc -ln -1 | $CLIPBOARD ;}
 # maven functions
 function mist() { mvn -T 1C clean install "$@" -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
 function mid() { mvn -pl "$@" -amd clean install ;}
-function msv() { mvn versions:set -DnewVersion="$*" ;}
+function msv() {
+  mvn versions:set -DnewVersion="$*";
+  rm -rf *.versionsBackup
+  for i in $(ls -d */); 
+    do
+      [[ -e "$i" ]] || break
+      rm -rf "$i"*.versionsBackup
+  done
+}
 
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
