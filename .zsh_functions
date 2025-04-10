@@ -51,7 +51,7 @@ function containers() {
     --bind 'ctrl-r:reload:[[ ! {fzf:prompt} =~ ALL ]] &&
               docker ps --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}" ||
               docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}"' \
-    --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/sh > /dev/tty" \
+    --bind "enter:execute:echo docker exec -ti {2}; docker exec -ti {1} /bin/bash > /dev/tty" \
     --info=inline --layout=reverse --header-lines=1 \
     --preview-window 'up,70%,border-bottom,+{2}+3/3,~3' \
     --preview "docker container logs {1}" \
@@ -94,7 +94,7 @@ function dockerCommand() {
     docker "$@" "$i" 1> /dev/null;
   done
 }
-function dockerContainerTerminal () { docker exec -ti "$(docker ps | fzf | awk '{print $1}')" /bin/sh ;}
+function dockerContainerTerminal () { docker exec -ti "$(docker ps | fzf | awk '{print $1}')" /bin/bash ;}
 function dockerContainerExec () { docker exec "$(docker ps | fzf | awk '{print $1}')" $* ;}
 
 # git functions (need to handle ??)

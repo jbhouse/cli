@@ -6,13 +6,13 @@ function kafkaPublishMessage() {
   TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
   while getopts 'e' flag; do
     case "${flag}" in
-      e) micro ~/.zsh_local/kafka_messages/"$TOPIC_NAME".json ;;
+      e) micro ~/.zsh_local/kafka_messages/$TOPIC_NAME.json ;;
       *) print_usage
         exit 1 ;;
     esac
   done
-   echo "publishing ~/.zsh_local/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
-  jq -rc . "~HOME/Documents/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+  echo "publishing ~/.zsh_local/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
+  jq -rc . "$HOME/.zsh_local/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
   # to publish yourself, echo "{}" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
 # need to first check for the existence of path: ~/.zsh_local/kafka_messages/kafka_map.json
