@@ -23,53 +23,55 @@ function allLogsFor() {
   tmux attach -t $1
 }
 
-function hlm() { cube-configure; helm -n $KNS --kubeconfig=$KUBECONFIG $* ;}
+function hlm() { cubeConfigure; helm -n $KNS --kubeconfig=$KUBECONFIG $* ;}
 
-function cube-describe() {
-  cube describe po $(cube get po | fzf | awk '{ print $1 }')
+function podDescribe() {
+  if [ ! -z "$1" ]
+    then cube describe po $1;
+    else cube describe po $(podGet);
+  fi
 }
 
-function cube-delete() {
+function podDelete() {
+  if [ ! -z "$1" ]
+    then cube delete po $1;
+    else cube delete po $(podGet);
+  fi
+}
+
+function podLogs() {
+  if [ ! -z "$1" ]
+    then cube logs $*;
+    else cube logs $* $(podGet);
+  fi
+}
+
+function podExec() { cube exec $(podGet) -- $* ;}
+
+function podTerminal() {
     if [ ! -z "$1" ]
-        then cube delete po $1;
-        else cube delete po $(cube-get-pod);
+        then cube exec "$1" -it -- /bin/sh
+        else cube exec $(podGet) -it -- /bin/sh
     fi
 }
 
-function cube-logs() { cube logs $* $(cube-get-pod); }
+function podGet() { cube get po | awk '{ print $1 }' | fzf ;}
 
-function cube-configure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then senv ; fi ; }
+function cubeConfigure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then senv ; fi ; }
 
 function cube() {
-  cube-configure;
+  cubeConfigure;
   kubectl -n $KNS --kubeconfig=$KUBECONFIG $*;
 }
 
-function cube-scale() {
-    DEPLOY_NAME=$(cube get deployments | fzf | awk '{ print $1 }')
-    echo "Scaling deployment ${DEPLOY_NAME}"
-    echo "How many replicas would you like to scale to?"
-    read replicacount
-    cube scale --replicas=$replicacount deployment/$DEPLOY_NAME
+function cubeScale() {
+  RESOURCE_TYPE=$(echo "statefulsets\ndeployments" | fzf)
+  RESOURCE_NAME=$(cube get $RESOURCE_TYPE | fzf | awk '{ print $1 }')
+  echo "Scaling deployment ${RESOURCE_NAME}"
+  echo "How many replicas would you like to scale to?"
+  read replicacount
+  cube scale $RESOURCE_TYPE $RESOURCE_NAME --replicas=$replicacount
 }
-
-function cube-exec() { cube exec $(cube-get-pod) -- $* ;}
-
-function cube-terminal() {
-    if [ ! -z "$1" ]
-        then cube exec "$1" -it -- /bin/sh
-        else cube exec $(cube-get-pod) -it -- /bin/sh
-    fi
-}
-
-function cube-all-pods() {
-    if [ ! -z "$1" ]
-        then cube get po | awk '{ print $1 }' | grep $1
-        else cube get po | awk '{ print $1 }'
-    fi
-}
-
-function cube-get-pod() { cube get po | awk '{ print $1 }' | fzf ;}
 
 function senv() {
     ENV_NAME=$(ls ~/.kube | fzf)
