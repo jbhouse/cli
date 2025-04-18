@@ -73,6 +73,17 @@ if [[ "${kafka_func}" == "Y" ]] || [[ "${kafka_func}" == "y" ]]
   brew install kafka
 fi
 
+echo
+echo '----------------------------'
+echo 'symlink kubernetes functions? (y/Y) or (n/N)'
+echo '----------------------------'
+read kubernetes_func
+echo
+
+if [[ "${kubernetes_func}" == "Y" ]] || [[ "${kubernetes_func}" == "y" ]]
+  then ln -s "$(pwd)"/util_functions/.kubernetes_functions ~/.zsh_optional/.kubernetes_functions
+fi
+
 if [ -f ~/.gitconfig ]
   then
     echo "$HOME/.gitconfig already exists."
