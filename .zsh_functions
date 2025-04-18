@@ -44,7 +44,7 @@ function containers() {
     --bind "ctrl-s:execute:docker stop {1} > /dev/null" \
     --bind "ctrl-x:execute:docker start {1} > /dev/null" \
     --bind "ctrl-d:execute:docker stop {1} && docker rm {1} -v > /dev/null;" \
-    --bind "ctrl-p:execute:docker system prune > /dev/null" \
+    --bind "ctrl-p:execute:docker container prune > /dev/null" \
     --bind 'ctrl-z:transform:[[ ! {fzf:prompt} =~ ALL ]] &&
               echo "change-prompt(ALL > )+reload(docker ps -a --format \"table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}\")" ||
               echo "change-prompt(ACTIVE > )+reload(docker ps --format \"table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}\")"' \
@@ -56,7 +56,7 @@ function containers() {
     --preview-window 'up,70%,border-bottom,+{2}+3/3,~3' \
     --preview "docker container logs {1}" \
     --prompt "docker ps -a >" \
-    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container) | CTRL-P (prune system) | CTRL-R (reload) | CTRL-Z (toggle between all or active containers) | ENTER (exec into container)\n'
+    --header $'CTRL-O (open logs in editor) | CTRL-S (stop container) | CTRL-X (start container) | CTRL-D (delete container) | CTRL-P (prune containers) | CTRL-R (reload) | CTRL-Z (toggle between all or active containers) | ENTER (exec into container)\n'
 }
 
 function networks() {
@@ -73,6 +73,7 @@ function networks() {
 
 function images() {
   docker image ls | fzf \
+    --bind "ctrl-s:execute:stopContainersUsingImage {3} > /dev/null;" \
     --bind "ctrl-d:execute:docker image rm {3} > /dev/null;" \
     --bind "ctrl-p:execute:docker image prune -f > /dev/null" \
     --bind "ctrl-r:reload:docker image ls" \
@@ -83,11 +84,24 @@ function images() {
     --header $'CTRL-S (stop all containers using image) | CTRL-D (delete image) | CTRL-P (prune images) | CTRL-R (reload)\n'
 }
 
-function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do echo "docker stop $i"; done;}
+function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do docker stop $i && docker rm $i && docker image rm $1; done;}
 
+function dockerNetworkDelete() {
+  for i in $(docker network ls | fzf -m | awk '{print $1}'); do
+    docker network rm "$i" 1> /dev/null;
+  done
+}
+function dockerImageDelete() {
+  for i in $(docker image ls | fzf -m | awk '{print $1}'); do
+    docker image rm "$i" 1> /dev/null;
+  done
+}
+# todo: make it so fzf is bypassed if there is an argument passed in
+# goal: $ dockerContainerStop *containerId* && dockerContainerDelete *containerId*
 function dockerContainerStart() { dockerCommand start ;}
 function dockerContainerStop() { dockerCommand stop ;}
 function dockerContainerRestart() { dockerCommand restart ;}
+function dockerContainerDelete() { dockerCommand rm ;}
 function dockerCommand() {
   for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
     echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being "$*"ed
