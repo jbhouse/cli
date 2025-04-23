@@ -11,9 +11,9 @@ function kafkaPublishMessage() {
         exit 1 ;;
     esac
   done
-  echo "publishing ~/.zsh_local/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with brokers $BOOTSTRAP_SERVER"
-  jq -rc . "$HOME/.zsh_local/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
-  # to publish yourself, echo "{}" | kafka-console-producer --broker-list "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+  echo "publishing ~/.zsh_local/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with bootstrap-server $BOOTSTRAP_SERVER"
+  jq -rc . "$HOME/.zsh_local/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --bootstrap-server "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+  # to publish yourself, echo "{}" | kafka-console-producer --bootstrap-server "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
 }
 # need to first check for the existence of path: ~/.zsh_local/kafka_messages/kafka_map.json
 function kafkaConsumeMessage() {
