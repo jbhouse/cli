@@ -30,13 +30,15 @@ function msv() {
   done
 }
 
+# grepForEverythingAfterPattern  grep --line-buffered 'Sinking Policy Evaluation Result:' | sed -u 's/^.*Sinking Policy Evaluation Result: //p'
+
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
 function smux() { PROJECT=$(ls ~/.config/tmuxinator/ | sed 's/[.].*$//' | fzf) ; if [ ! -z "$PROJECT" ]; then tmuxinator start $PROJECT; fi ;}
 function mux() { if [ $# -eq 0 ]; then smux ; else tmuxinator start $*; fi ;}
 function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
-function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
-function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
+function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n 's/:.*//p' | fzf); else tmux attach -t $*; fi ;}
+function tks() { tmux kill-session -t $(tmux ls | sed -n 's/:.*//p' | fzf -m) ;}
 
 function containers() {
   docker ps -a --format 'table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Names}}' | fzf \
