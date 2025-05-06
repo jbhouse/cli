@@ -49,15 +49,15 @@ function podLogs() {
 function podExec() { cube exec $(podGet) -- $* ;}
 
 function podTerminal() {
-    if [ ! -z "$1" ]
-        then cube exec "$1" -it -- /bin/sh
-        else cube exec $(podGet) -it -- /bin/sh
-    fi
+  if [ ! -z "$1" ]
+    then cube exec "$1" -it -- /bin/bash
+    else cube exec $(podGet) -it -- /bin/bash
+  fi
 }
 
 function podGet() { cube get po | awk '{ print $1 }' | fzf ;}
 
-function cubeConfigure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then senv ; fi ; }
+function cubeConfigure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then seedEnv ; fi ; }
 
 function cube() {
   cubeConfigure;
@@ -73,12 +73,27 @@ function cubeScale() {
   cube scale $RESOURCE_TYPE $RESOURCE_NAME --replicas=$replicacount
 }
 
-function senv() {
-    ENV_NAME=$(ls ~/.kube | fzf)
-#    rm ~/.kube/config; ln -s ~/.kube/$ENV_NAME ~/.kube/config
-    KUBECONFIG=~/.kube/$ENV_NAME
-    KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
-#    KNS=$(kubectl get namespaces | awk '{print $1}' | fzf)
+function setEnv() {
+  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
+  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
+}
+
+function initEnv() {
+  if [ -f ~/.kube_env ]
+    then 
+      KUBECONFIG=$(sed -n "s|^KUBECONFIG=||p" ~/.kube_env)
+      KNS=$(sed -n "s|^KNS=||p" ~/.kube_env)
+    else senv
+  fi
+}
+
+function seedEnv() {
+  if [ ! -f ~/.kube_env ]
+    then printf "KUBECONFIG=default\nKNS=default" > ~/.kube_env
+  fi
+  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
+  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
+  sed -i -e "s|KUBECONFIG=.*|KUBECONFIG=$KUBECONFIG|" -e "s|KNS=.*|KNS=$KNS|" ~/.kube_env
 }
 
 function cube-control() {
@@ -239,3 +254,5 @@ function hist() {
   fi
   eval $num;
 }
+
+initEnv

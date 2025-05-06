@@ -2,6 +2,7 @@
 
 function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCode" --args "$@" ;}
 function updateEnvFile() {
+    # cat ~/.zsh_env | sed "s/JAVA_HOME=.*$/JAVA_HOME=\/opt\/homebrew\/opt\/openjdk@21\/libexec\/openjdk.jdk\/Contents\/Home/"
     sed -i "/JAVA_HOME=/c export JAVA_HOME=/opt/homebrew/opt/openjdk@$1/libexec/openjdk.jdk/Contents/Home" ~/.zsh_env
     fresh
 }

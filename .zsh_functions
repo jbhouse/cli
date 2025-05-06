@@ -30,8 +30,6 @@ function msv() {
   done
 }
 
-# grepForEverythingAfterPattern  grep --line-buffered 'Sinking Policy Evaluation Result:' | sed -u 's/^.*Sinking Policy Evaluation Result: //p'
-
 # tmux functions
 # function muxr() { PROJECT=~/.config/tmuxinator/paths$(pwd)/tmuxinator.yml ; if [ -f $PROJECT ]; then tmuxinator start -p $PROJECT; else smux; fi ;}
 function smux() { PROJECT=$(ls ~/.config/tmuxinator/ | sed 's/[.].*$//' | fzf) ; if [ ! -z "$PROJECT" ]; then tmuxinator start $PROJECT; fi ;}

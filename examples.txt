@@ -25,3 +25,17 @@ function idk() {
 }
 Note: If a character is followed by a colon (e.g. f:), that option is expected to have an argument.
 ./script -v -a -b -f filename
+
+cube logs event-flow-cms-dc-mdpo-policy-evaluator-0 | awk '/EventFilterer.*response.*$/ {$1=$2=$3=""; print $0}' | sed -n 's/^.*response body: //p'
+
+cube logs event-flow-cms-dc-mdpo-policy-evaluator-0 | grep --color -E "(([a-z0-9]{4}+\:[a-z0-9]{4}+\:[a-z0-9]{4}+\:[a-z0-9]{4}+\:[a-z0-9]{4}+\:[a-z0-9]{4}+\:[a-z0-9]{4}+\:[a-z0-9]{4})|([0-9]+\.[0-9]+\.[0-9]+\.([0-9]){3}))"
+
+cube logs -f event-flow-cms-dc-mdpo-policy-evaluator-0 | grep --line-buffered 'Sinking Policy Evaluation Result:' | sed -n -u 's/^.*Sinking Policy Evaluation Result: //p'
+// --line-buffered and -u allow for interactive (non-buffered) printing
+
+cube logs event-flow-cms-dc-mdpo-policy-evaluator-0 | awk '/EventFilterer.*response.*$/ {$1=$2=$3=""; print $0}' | sed -n 's/response body: .*$/\*/p'
+
+cube logs speedboost-cms-device-connect-mdpo-policy-evaluator-0 | sed -u -n 's/^.*Sinking Policy Evaluation Result: //p' | jq
+
+// Let’s put parentheses around the matched text
+sed 's/^.*at/(&)/' song.txt
