@@ -23,7 +23,7 @@ function allLogsFor() {
   tmux attach -t $1
 }
 
-function hlm() { cubeConfigure; helm -n $KNS --kubeconfig=$KUBECONFIG $* ;}
+function hlm() { cube-configure; helm -n $KNS --kubeconfig=$KUBECONFIG $* ;}
 
 function podDescribe() {
   if [ ! -z "$1" ]
@@ -57,10 +57,10 @@ function podTerminal() {
 
 function podGet() { cube get po | awk '{ print $1 }' | fzf ;}
 
-function cubeConfigure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then seedEnv ; fi ; }
+function cube-configure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then seedEnv ; fi ; }
 
 function cube() {
-  cubeConfigure;
+  cube-configure;
   kubectl -n $KNS --kubeconfig=$KUBECONFIG $*;
 }
 
@@ -73,71 +73,48 @@ function cubeScale() {
   cube scale $RESOURCE_TYPE $RESOURCE_NAME --replicas=$replicacount
 }
 
-function setEnv() {
-  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
-  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
-}
-
-function initEnv() {
-  if [ -f ~/.kube_env ]
-    then 
-      KUBECONFIG=$(sed -n "s|^KUBECONFIG=||p" ~/.kube_env)
-      KNS=$(sed -n "s|^KNS=||p" ~/.kube_env)
-    else senv
-  fi
-}
-
-function seedEnv() {
-  if [ ! -f ~/.kube_env ]
-    then printf "KUBECONFIG=default\nKNS=default" > ~/.kube_env
-  fi
-  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
-  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
-  sed -i -e "s|KUBECONFIG=.*|KUBECONFIG=$KUBECONFIG|" -e "s|KNS=.*|KNS=$KNS|" ~/.kube_env
-}
-
-function cube-control() {
-  tmux new-session -d -s "cube-control";
+function cubeControl() {
+  tmux new-session -d -s "cubeControl";
   tmux rename-window "pods";
-  tmux send-keys -t "cube-control":"pods" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"pods" "pods" C-m;
+  tmux send-keys -t "cubeControl":"pods" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"pods" "pods" C-m;
 
-  tmux new-window -t "cube-control":1;
+  tmux new-window -t "cubeControl":1;
   tmux rename-window "services";
-  tmux send-keys -t "cube-control":"services" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"services" "services" C-m;
+  tmux send-keys -t "cubeControl":"services" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"services" "services" C-m;
 
-  tmux new-window -t "cube-control":2;
+  tmux new-window -t "cubeControl":2;
   tmux rename-window "deployments";
-  tmux send-keys -t "cube-control":"deployments" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"deployments" "deployments" C-m;
+  tmux send-keys -t "cubeControl":"deployments" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"deployments" "deployments" C-m;
 
-  tmux new-window -t "cube-control":3;
+  tmux new-window -t "cubeControl":3;
   tmux rename-window "statefulsets";
-  tmux send-keys -t "cube-control":"statefulsets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"statefulsets" "statefulsets" C-m;
+  tmux send-keys -t "cubeControl":"statefulsets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"statefulsets" "statefulsets" C-m;
 
-  tmux new-window -t "cube-control":4;
+  tmux new-window -t "cubeControl":4;
   tmux rename-window "replicasets";
-  tmux send-keys -t "cube-control":"replicasets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"replicasets" "replicasets" C-m;
+  tmux send-keys -t "cubeControl":"replicasets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"replicasets" "replicasets" C-m;
 
-  tmux new-window -t "cube-control":5;
+  tmux new-window -t "cubeControl":5;
   tmux rename-window "configmaps";
-  tmux send-keys -t "cube-control":"configmaps" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"configmaps" "configmaps" C-m;
+  tmux send-keys -t "cubeControl":"configmaps" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"configmaps" "configmaps" C-m;
 
-  tmux new-window -t "cube-control":6;
+  tmux new-window -t "cubeControl":6;
   tmux rename-window "secrets";
-  tmux send-keys -t "cube-control":"secrets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"secrets" "secrets" C-m;
+  tmux send-keys -t "cubeControl":"secrets" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"secrets" "secrets" C-m;
 
-  tmux new-window -t "cube-control":7;
+  tmux new-window -t "cubeControl":7;
   tmux rename-window "ingress";
-  tmux send-keys -t "cube-control":"ingress" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  tmux send-keys -t "cube-control":"ingress" "ingress" C-m;
+  tmux send-keys -t "cubeControl":"ingress" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
+  tmux send-keys -t "cubeControl":"ingress" "ingress" C-m;
 
-  tmux attach -t "cube-control";
+  tmux attach -t "cubeControl";
 }
 
 function pods() {
@@ -235,6 +212,29 @@ function ingress() {
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
+}
+
+function setEnv() {
+  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
+  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
+}
+
+function initEnv() {
+  if [ -f ~/.kube_env ]
+    then 
+      KUBECONFIG=$(sed -n "s|^KUBECONFIG=||p" ~/.kube_env)
+      KNS=$(sed -n "s|^KNS=||p" ~/.kube_env)
+    else setEnv
+  fi
+}
+
+function seedEnv() {
+  if [ ! -f ~/.kube_env ]
+    then printf "KUBECONFIG=default\nKNS=default" > ~/.kube_env
+  fi
+  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
+  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
+  sed -i -e "s|KUBECONFIG=.*|KUBECONFIG=$KUBECONFIG|" -e "s|KNS=.*|KNS=$KNS|" ~/.kube_env
 }
 
 function update_ps1() { PS1="kubectl --kubeconfig=$KUBECONFIG -n $KNS \n> " ;}
