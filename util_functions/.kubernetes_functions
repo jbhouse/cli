@@ -122,7 +122,7 @@ function pods() {
     --bind "ctrl-o:execute:${EDITOR:-vim} <(kubectl logs --all-containers --kubeconfig=$KUBECONFIG -n $KNS {1}) > /dev/tty" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete pod {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get po" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG logs -n $KNS {1}" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -135,7 +135,7 @@ function services() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit services/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete services {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get services" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get services {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -147,7 +147,7 @@ function deployments() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit deployment/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete deployment {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -159,7 +159,7 @@ function statefulsets() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit statefulset/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete statefulset {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -171,7 +171,7 @@ function replicasets() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit replicaset/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete replicaset {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -183,7 +183,7 @@ function configmaps() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit configmap/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete configmap {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get configmaps" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get configmaps {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -195,7 +195,7 @@ function secrets() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit secret/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete secret {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get secrets" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get secrets {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
@@ -207,7 +207,7 @@ function ingress() {
     --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit ingress/{1} -o yaml" \
     --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete ingress {1}" \
     --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get ingress" \
-    --preview-window up \
+    --preview-window right \
     --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get ingress {1} -o yaml" \
     --info=inline --header-lines=1 \
     --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \

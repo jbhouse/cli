@@ -113,29 +113,62 @@ function dockerContainerExec () { docker exec "$(docker ps | fzf | awk '{print $
 
 function gitControl() {
   WORKING_DIR=$(pwd);
-  tmux new-session -d -s $WORKING_DIR;
-  
-  tmux rename-window "diffLocal";
-  tmux split-window -h;
-  tmux send-keys -t $WORKING_DIR:diffLocal.0 'gitDiffStaged' C-m;
-  tmux send-keys -t $WORKING_DIR:diffLocal.1 'gitDiffUnstaged' C-m;
 
-  tmux new-window -t "$WORKING_DIR":1;
-  tmux rename-window "diffCommits";
-  # tmux split-window -v;
-  # tmux split-window -h
+  # Check if the session exists, discarding output
+  # We can check $? for the exit status (zero for success, non-zero for failure)
+  tmux has-session -t $WORKING_DIR 2>/dev/null
 
-  # tmux send-keys -t "cubeControl":"services" "KNS=$KNS;KUBECONFIG=$KUBECONFIG" C-m;
-  # tmux send-keys -t $WORKING_DIR:diffCommits.1 'gitDiffUnstaged' C-m;
-  # tmux send-keys -t $WORKING_DIR:diffCommits.2 'gitDiffUnstaged' C-m;
-  COMMIT_HASH=$(git log --pretty=oneline | fzf | awk '{print $1}')
-  COMMIT_HASH_2=$(git rev-list -n 1 $(git tag -n1 | fzf | awk '{print $1}'))
-  tmux send-keys -t $WORKING_DIR:diffCommits "COMMIT_HASH=$COMMIT_HASH;COMMIT_HASH_2=$COMMIT_HASH_2" C-m;
-  tmux send-keys -t $WORKING_DIR:diffCommits 'gitDiffCommits' C-m;
+  if [ $? != 0 ]; 
+    then
+      # Set up your session
+      tmux new-session -d -s $WORKING_DIR;
+      tmux rename-window "diffLocal";
+      tmux split-window -h;
+      tmux send-keys -t $WORKING_DIR:diffLocal.0 'gitDiffStaged' C-m;
+      tmux send-keys -t $WORKING_DIR:diffLocal.1 'gitDiffUnstaged' C-m;
 
-  tmux attach -t "$WORKING_DIR";
+      tmux new-window -t "$WORKING_DIR":1;
+      tmux rename-window "diffCommits";
+
+      tmux split-window -v;
+      tmux split-window -v;
+      tmux split-window -h;
+      tmux select-layout tiled;
+      tmux resizep -t $WORKING_DIR:diffCommits.0 -y "80%"
+
+      tmux send-keys -t $WORKING_DIR:diffCommits.0 "gitDiffCommits" C-m;
+      tmux send-keys -t $WORKING_DIR:diffCommits.1 "gitCherryPick" C-m;
+      tmux send-keys -t $WORKING_DIR:diffCommits.2 "mainCommitHash $WORKING_DIR" C-m;
+      tmux send-keys -t $WORKING_DIR:diffCommits.3 "diffCommitHash $WORKING_DIR" C-m;
+  fi
+  tmux attach-session -t $WORKING_DIR;
 }
-
+function gitCherryPick() {
+  for i in $(selectCommits); do git cherry-pick "$i"; done
+}
+function selectCommits() {
+  git log --pretty=oneline $(tmux showenv | sed -n "s/COMMIT_HASH=//p")...$(tmux showenv | sed -n "s/COMMIT_HASH_2=//p") | fzf \
+    -m --ansi \
+    --bind 'ctrl-r:reload:git log --pretty=oneline $(tmux showenv | sed -n "s/COMMIT_HASH=//p")...$(tmux showenv | sed -n "s/COMMIT_HASH_2=//p")' \
+    --preview 'git show --color=always {1}' \
+    | awk '{print $1}'
+}
+function mainCommitHash() {
+  COMMIT_HASH=$(git log --pretty=oneline | fzf | awk '{print $1}')
+  tmux setenv COMMIT_HASH $COMMIT_HASH
+}
+function diffCommitHash() {
+  COMMIT_HASH_2=$(git rev-list -n 1 $(git tag -n1 --sort=-v:refname | fzf | awk '{print $1}'))
+  tmux setenv COMMIT_HASH_2 $COMMIT_HASH_2
+}
+function gitDiffCommits() {
+  git diff --name-only $(tmux showenv | sed -n "s/COMMIT_HASH=//p") $(tmux showenv | sed -n "s/COMMIT_HASH_2=//p") | fzf \
+    -m --ansi \
+    --bind 'ctrl-r:reload:git diff --name-only $(tmux showenv | sed -n "s/COMMIT_HASH=//p") $(tmux showenv | sed -n "s/COMMIT_HASH_2=//p")' \
+    --preview 'git diff --color=always $(tmux showenv | sed -n "s/COMMIT_HASH=//p") $(tmux showenv | sed -n "s/COMMIT_HASH_2=//p") {1}' \
+    --prompt 'git diff >' \
+    --header $'CTRL-R (reload)\n'
+}
 function gitDiffUnstaged() {
   preview=( "git diff $@ --color=always -- {-1}" ) # array
   git diff "$@" --name-only | fzf \
@@ -159,29 +192,6 @@ function gitDiffStaged() {
     --preview $preview \
     --prompt "staged changes >" \
     --header $'CTRL-O (open in editor) | CTRL-S (unstage) | CTRL-E (stash) | CTRL-R (reload)\n'
-}
-function gitDiffCommits() {
-  git diff --name-only $COMMIT_HASH $COMMIT_HASH_2 | fzf \
-    -m --ansi \
-    --bind "ctrl-o:execute:${EDITOR:-vim} {0} > /dev/tty" \
-    --bind "ctrl-r:reload:git diff --name-only $COMMIT_HASH $COMMIT_HASH_2" \
-    --bind "ctrl-p:execute:git status" \
-    --preview "git diff --color=always $COMMIT_HASH $COMMIT_HASH_2 {1}" \
-    --prompt "git diff $COMMIT_HASH $COMMIT_HASH_2 >" \
-    --header $'CTRL-O (open in editor) | CTRL-P (cherry-pick) | CTRL-R (reload)\n'
-}
-function gitDiff() {
-  # first, check for existing session
-  tmux new-session -d -s $(pwd)
-
-  # Split horizonatally
-  tmux split-window -h;
-
-  # Send the 'git' command to both panes
-  tmux send-keys -t $(pwd):0.0 'gitDiffStaged' C-m;
-  tmux send-keys -t $(pwd):0.1 'gitDiffUnstaged' C-m;
-
-  tmux attach-session -t "$(pwd)";
 }
 function gitFileRevert() {
   FILE=$(git status --porcelain | sed 's/M //g;s/A //g;s/R //g;s/C //g;s/D //g' | fzf -m | sed 's/^[[:space:]]*//g')
