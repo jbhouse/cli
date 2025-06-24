@@ -31,24 +31,40 @@ function git_prompt_info() {
 local return_code="%(?..%{$fg[red]%}%? ↵%{$reset_color%})"
 
 if [[ $UID -eq 0 ]]; then
-    local user_host='%{$terminfo[bold]$fg[red]%}%n@%m%{$reset_color%}'
+    local user_host='%{$terminfo[bold]$fg[red]%}%n$reset_color%}'
     local user_symbol='#'
 else
-    local user_host='%{$terminfo[bold]$fg[cyan]%}%n@%m%{$reset_color%}'
+    local user_host='%{$terminfo[bold]$fg[cyan]%}%n$reset_color%}'
     local user_symbol='$'
 fi
 
 local current_dir='%{$terminfo[bold]$fg[yellow]%}%~%{$reset_color%}'
 local git_branch='$(git_prompt_info)%{$reset_color%}'
+local kubernetes_context='%{$fg[magenta]%}$(kubernetes_info)%{$reset_color%}'
+local meta_info='$(decorate_prompt)'
+
+function decorate_prompt() {
+  if [ ! -f ~/.kube_env ]
+    then
+      echo "╭─ ${user_host} ${current_dir} ${git_branch}"
+    else
+      echo "╭─ ${kubernetes_context}"
+      echo "├─ ${user_host} ${current_dir} ${git_branch}"
+  fi
+  echo "╰─%B${user_symbol}%b "
+}
 
 function git_prompt_info() {
   ref=$(git symbolic-ref HEAD 2> /dev/null) || return
   echo "$(parse_git_dirty)$ZSH_THEME_GIT_PROMPT_PREFIX$(current_branch)$ZSH_THEME_GIT_PROMPT_SUFFIX"
 }
 
+function kubernetes_info() {
+  echo "kubernetes --namespace $KNS --context $CONTEXT"
+}
+
 PROMPT="
-╭─${user_host}  ${current_dir}  ${git_branch}
-╰─%B${user_symbol}%b "
+$(decorate_prompt)"
 RPS1="%B${return_code}%b"
 
 

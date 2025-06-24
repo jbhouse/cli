@@ -3,11 +3,11 @@
 function allLogsFor() {
   pane=0
   window=0
-  for pod in $(cube-all-pods $1); do
-    if [ $pane == 0 ]; then tmux new-session -d -s $1;
+  for pod in $(podsList $1); do
+    if [ $pane -eq 0 ]; then tmux new-session -d -s $1;
       else
         n=$(($pane%5))
-        if [ $n == 0 ];
+        if [ $n -eq 0 ];
           then
             ((window++));
             pane=0;
@@ -23,7 +23,14 @@ function allLogsFor() {
   tmux attach -t $1
 }
 
-function hlm() { cube-configure; helm -n $KNS --kubeconfig=$KUBECONFIG $* ;}
+function hlm() { cube-configure; helm -n $KNS --kubeconfig=$KUBECONFIG --kube-context=$CONTEXT $* ;}
+
+function podsList() {
+  if [ ! -z "$1" ]
+    then cube get po | awk '{ print $1 }' | grep $1
+    else cube get po | awk '{ print $1 }'
+  fi
+}
 
 function podDescribe() {
   if [ ! -z "$1" ]
@@ -39,13 +46,6 @@ function podDelete() {
   fi
 }
 
-function podLogs() {
-  if [ ! -z "$1" ]
-    then cube logs $*;
-    else cube logs $* $(podGet);
-  fi
-}
-
 function podExec() { cube exec $(podGet) -- $* ;}
 
 function podTerminal() {
@@ -57,11 +57,80 @@ function podTerminal() {
 
 function podGet() { cube get po | awk '{ print $1 }' | fzf ;}
 
-function cube-configure() { if [ -z $KNS ] || [ -z $KUBECONFIG ]; then seedEnv ; fi ; }
+function cube-configure() { if [ -z $KNS ] || [ -z $KUBECONFIG ] || [ -z $CONTEXT ]; then cubeSetEnv ; fi ; }
 
 function cube() {
   cube-configure;
-  kubectl -n $KNS --kubeconfig=$KUBECONFIG $*;
+  kubectl -n $KNS --kubeconfig=$KUBECONFIG --context=$CONTEXT $*;
+}
+
+function cubeUpdateConfig() {
+  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
+}
+
+function cubeUpdateContext() {
+  CONTEXT=$(kubectl --kubeconfig=$KUBECONFIG config get-contexts | sed '1d' | awk '{print $2}' | fzf)
+}
+
+function cubeUpdateNamespace() {
+  KNS=$(kubectl --kubeconfig=$KUBECONFIG --context=$CONTEXT get namespaces | awk '{print $1}' | fzf)
+}
+
+function cubeReadConfig() {
+  KUBECONFIG=$(sed -n "s|^KUBECONFIG=||p" ~/.kube_env)
+}
+
+function cubeReadContext() {
+  CONTEXT=$(sed -n "s|^CONTEXT=||p" ~/.kube_env)
+}
+
+function cubeReadNamespace() {
+  KNS=$(sed -n "s|^KNS=||p" ~/.kube_env)
+}
+
+function readEnv() {
+  cubeReadConfig
+  cubeReadContext
+  cubeReadNamespace
+  # check if current context is different from context
+  # kubectl --kubeconfig=$KUBECONFIG config set-context $CONTEXT
+}
+
+function cubeSetEnv() {
+  cubeUpdateConfig
+  cubeUpdateContext
+  cubeUpdateNamespace
+  # check if current context is different from context
+  # kubectl --kubeconfig=$KUBECONFIG config set-context $CONTEXT 
+}
+
+function cubeUpdateEnv() {
+  cubeSetEnv
+  sed -i -e "s|KUBECONFIG=.*|KUBECONFIG=$KUBECONFIG|" -e "s|KNS=.*|KNS=$KNS|" -e "s|CONTEXT=.*|CONTEXT=$CONTEXT|" ~/.kube_env
+}
+
+function initEnv() {
+  if [ ! -f ~/.kube_env ]
+    then
+      printf "KUBECONFIG=default\nKNS=default\nCONTEXT=default" > ~/.kube_env
+      cubeUpdateEnv
+    else
+      readEnv
+  fi
+}
+
+# tmux functions
+function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
+function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
+function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
+
+# function hist() { num=$(history | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); eval $num ;}
+function hist() {
+  if [ ! -z "$1" ]
+    then num=$(history | sort -rn | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g');
+    else num=$(history | sort -rn | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g');
+  fi
+  eval $num;
 }
 
 function cubeScale() {
@@ -118,141 +187,101 @@ function cubeControl() {
 }
 
 function pods() {
+  readEnv
   cube get po | fzf \
-    --bind "ctrl-o:execute:${EDITOR:-vim} <(kubectl logs --all-containers --kubeconfig=$KUBECONFIG -n $KNS {1}) > /dev/tty" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete pod {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get po" \
+    --bind "ctrl-o:execute:${EDITOR:-vim} <(cube logs --all-containers {1}) > /dev/tty" \
+    --bind "ctrl-d:execute:cube delete pod {1}" \
+    --bind "ctrl-r:reload:cube get po" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG logs -n $KNS {1}" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT logs {1}" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-O (open log in editor) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 #    --bind "enter:execute:kubectl exec -it --kubeconfig=$KUBECONFIG -n $KNS {1} -- /bin/sh > /dev/tty"
 }
 
 function services() {
   cube get services | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit services/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete services {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get services" \
+    --bind "ctrl-e:execute:cube edit services/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete services {1}" \
+    --bind "ctrl-r:reload:cube get services" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get services {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get services {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function deployments() {
   cube get deployments | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit deployment/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete deployment {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments" \
+    --bind "ctrl-e:execute:cube edit deployment/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete deployment {1}" \
+    --bind "ctrl-r:reload:cube get deployments" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get deployments {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get deployments {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function statefulsets() {
   cube get statefulsets | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit statefulset/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete statefulset {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets" \
+    --bind "ctrl-e:execute:cube edit statefulset/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete statefulset {1}" \
+    --bind "ctrl-r:reload:cube get statefulsets" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get statefulsets {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get statefulsets {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function replicasets() {
   cube get replicasets | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit replicaset/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete replicaset {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets" \
+    --bind "ctrl-e:execute:cube edit replicaset/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete replicaset {1}" \
+    --bind "ctrl-r:reload:cube get replicasets" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get replicasets {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get replicasets {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function configmaps() {
   cube get configmaps | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit configmap/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete configmap {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get configmaps" \
+    --bind "ctrl-e:execute:cube edit configmap/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete configmap {1}" \
+    --bind "ctrl-r:reload:cube get configmaps" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get configmaps {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get configmaps {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function secrets() {
   cube get secrets | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit secret/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete secret {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get secrets" \
+    --bind "ctrl-e:execute:cube edit secret/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete secret {1}" \
+    --bind "ctrl-r:reload:cube get secrets" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get secrets {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get secrets {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
 }
 
 function ingress() {
   cube get ingress | fzf \
-    --bind "ctrl-e:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS edit ingress/{1} -o yaml" \
-    --bind "ctrl-d:execute:kubectl --kubeconfig=$KUBECONFIG -n $KNS delete ingress {1}" \
-    --bind "ctrl-r:reload:kubectl --kubeconfig=$KUBECONFIG -n $KNS get ingress" \
+    --bind "ctrl-e:execute:cube edit ingress/{1} -o yaml" \
+    --bind "ctrl-d:execute:cube delete ingress {1}" \
+    --bind "ctrl-r:reload:cube get ingress" \
     --preview-window right \
-    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS get ingress {1} -o yaml" \
+    --preview "kubectl --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT get ingress {1} -o yaml" \
     --info=inline --header-lines=1 \
-    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS> " \
+    --prompt "--kubeconfig=$KUBECONFIG namespace: $KNS --kubeconfig=$KUBECONFIG -n $KNS --context $CONTEXT> " \
     --header $'╱ CTRL-E (edit) ╱ CTRL-D (delete) ╱ CTRL-R (reload) ╱\n'
-}
-
-function setEnv() {
-  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
-  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
-}
-
-function initEnv() {
-  if [ -f ~/.kube_env ]
-    then 
-      KUBECONFIG=$(sed -n "s|^KUBECONFIG=||p" ~/.kube_env)
-      KNS=$(sed -n "s|^KNS=||p" ~/.kube_env)
-    else setEnv
-  fi
-}
-
-function seedEnv() {
-  if [ ! -f ~/.kube_env ]
-    then printf "KUBECONFIG=default\nKNS=default" > ~/.kube_env
-  fi
-  KUBECONFIG=~/.kube/$(ls ~/.kube | fzf)
-  KNS=$(kubectl --kubeconfig=$KUBECONFIG get namespaces | awk '{print $1}' | fzf)
-  sed -i -e "s|KUBECONFIG=.*|KUBECONFIG=$KUBECONFIG|" -e "s|KNS=.*|KNS=$KNS|" ~/.kube_env
-}
-
-function update_ps1() { PS1="kubectl --kubeconfig=$KUBECONFIG -n $KNS \n> " ;}
-
-PROMPT_COMMAND=update_ps1
-
-# tmux functions
-function tss() { if [ $# -eq 0 ]; then tmux; else tmux new -s $*; fi ;}
-function tas() { if [ $# -eq 0 ]; then tmux attach -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf); else tmux attach -t $*; fi ;}
-function tks() { tmux kill-session -t $(tmux ls | sed -n '/:/s/:.*//p' | fzf -m) ;}
-
-# function hist() { num=$(history | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); eval $num ;}
-function hist() {
-  if [ ! -z "$1" ]
-    then num=$(history | sort -rn | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g');
-    else num=$(history | sort -rn | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g');
-  fi
-  eval $num;
 }
 
 initEnv

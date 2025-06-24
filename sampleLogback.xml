@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.charter.mdpo.logging.LogMasking">
+                <maskPattern>\"response\"\s*:\s*\"(.*?)(?&lt;!\\)\"</maskPattern> <!-- mask fields which contain only bitmaps -->
+                <maskPattern>\"request\"\s*:\s*\"(.*?)(?&lt;!\\)\"</maskPattern> <!-- mask fields which contain only bitmaps -->
+                <!-- normally this regex pattern would read \"request\"\s*:\s*\"(.*?)(?<!\\)\" -->
+                <!-- this ensures that our pattern terminates on the last quote \" -->
+                <!-- that does not have an escape character preceding it (?<!\\) -->
+                <!-- this prevents us from terminating on escaped quotes that may be part of the field we are masking -->
+                <!-- however, <! causes the xml to break -->
+                <!-- so, instead, we use &lt;! which is the xml-escaped version of <! -->
+                <maskPattern>([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)</maskPattern> <!-- Ip address IPv4 pattern -->
+                <maskPattern>([0-9a-fA-F]+\:[0-9a-fA-F]+\:[0-9a-fA-F]+\:[0-9a-fA-F]+\:[0-9a-fA-F]+\:[0-9a-fA-F]+\:[0-9a-fA-F]+\:[0-9a-fA-F]+)</maskPattern> <!-- Ip address IPv6 pattern -->
+                <pattern>[%d] [%thread] [%level] [mdpoTraceId=%X{MDPO_TRACE_ID}] %logger{36} - %msg%n</pattern>
+            </layout>
+        </encoder>
+    </appender>
+    <root level="info">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
