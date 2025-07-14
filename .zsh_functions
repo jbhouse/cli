@@ -322,6 +322,7 @@ function j8() { updateEnvFile 8 ;}
 function j11() { updateEnvFile 11 ;}
 function j17() { updateEnvFile 17 ;}
 function j21() { updateEnvFile 21 ;}
+function j24() { updateEnvFile 24 ;}
 function backup() { (cd ~/Documents/cli && gitAddCommitPush $*) ;}
 
 # searching functions

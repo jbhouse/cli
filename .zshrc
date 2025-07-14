@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ### MANAGED BY RANCHER DESKTOP START (DO NOT EDIT)
-export PATH="/Users/P3193379/.rd/bin:$PATH"
+export PATH="$HOME/.rd/bin:$PATH"
 ### MANAGED BY RANCHER DESKTOP END (DO NOT EDIT)
 # Rancher was moved up here so that things appended to the path later while sourcing
 # can override binaries for RD (specifically kubectl)

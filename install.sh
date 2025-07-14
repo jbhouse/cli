@@ -45,7 +45,9 @@ echo 'creating symlinks'
 echo '----------------------------'
 
 ln -s "$(pwd)"/.gitignore_global ~/.gitignore_global
-for i in $(ls "$(pwd)"/.config); do; ln -s "$(pwd)"/.config/${i} ~/.config; done;
+for i in $(ls "$(pwd)"/.config); do 
+  ln -s "$(pwd)"/.config/${i} ~/.config
+done
 ln -s "$(pwd)"/.tmux.conf ~/.tmux.conf
 ln -s "$(pwd)"/.zshrc ~/.zshrc
 ln -s "$(pwd)"/.zsh_aliases ~/.zsh_aliases
@@ -82,6 +84,9 @@ echo
 
 if [[ "${kubernetes_func}" == "Y" ]] || [[ "${kubernetes_func}" == "y" ]]
   then ln -s "$(pwd)"/util_functions/.kubernetes_functions ~/.zsh_optional/.kubernetes_functions
+  $PACKAGE_MANAGER kubernetes-cli
+  $PACKAGE_MANAGER awscli
+  mkdir ~/.kube
 fi
 
 if [ -f ~/.gitconfig ]

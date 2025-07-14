@@ -49,5 +49,9 @@ if [[ "${install21}" == "Y" ]] || [[ "${install21}" == "y" ]]
 fi
 
 brew install gawk grep gnu-sed coreutils
+brew install --cask visual-studio-code
+brew install --cask iterm2
+brew install --cask raycast
+brew install --cask rancher
 
 softwareupdate --install-rosetta
