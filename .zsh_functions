@@ -11,11 +11,12 @@
 # \(.*\)      : match 'everything else' (probably not needed)
 # /\1/        : and replace with the first backslash-bracketed expression you found
 
-function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
+function key() { rm -rf ~/.ssh/id_ed25519 && ln -s ~/.ssh/id_ed25519.$1 ~/.ssh/id_ed25519 && chmod 0600 ~/.ssh/id_ed25519 && rm -rf ~/.ssh/id_ed25519.pub && ln -s ~/.ssh/id_ed25519.pub.$1 ~/.ssh/id_ed25519.pub ;}
 function treEnv() { tree env | grep .env | sed 's/.*├── //' |  sed 's/.*└── //' ;}
 
 function cc() { "$@" | $CLIPBOARD ;}
 function cpl() { fc -ln -1 | $CLIPBOARD ;}
+function killProcess() { lsof -i | fzf --bind "enter:execute:kill -9 {2} > /dev/tty" ;}
 
 # maven functions
 function mist() { mvn -T 1C clean install "$@" -Dmaven.test.skip=true -DskipTests -Dmaven.javadoc.skip=true ;}
@@ -73,8 +74,7 @@ function networks() {
 
 function images() {
   docker image ls | fzf \
-    --bind "ctrl-s:execute:stopContainersUsingImage {3} > /dev/null;" \
-    --bind "ctrl-d:execute:docker image rm {3} > /dev/null;" \
+    --bind "ctrl-d:execute:docker image rm {1} > /dev/null;" \
     --bind "ctrl-p:execute:docker image prune -f > /dev/null" \
     --bind "ctrl-r:reload:docker image ls" \
     --info=inline --layout=reverse --header-lines=1 \
@@ -83,8 +83,13 @@ function images() {
     --prompt "images >" \
     --header $'CTRL-S (stop all containers using image) | CTRL-D (delete image) | CTRL-P (prune images) | CTRL-R (reload)\n'
 }
+    # --bind "ctrl-s:execute:dockerContainersDeleteByImage {1} > /dev/null;" \
 
-function stopContainersUsingImage() { for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do docker stop $i && docker rm $i && docker image rm $1; done;}
+function dockerContainersDeleteByImage() {
+  for i in $(docker container ls --all --filter=ancestor=$1 --format "{{.ID}}"); do 
+    docker stop $i && docker rm $i && docker image rm $1; 
+  done
+}
 
 function dockerNetworkDelete() {
   for i in $(docker network ls | fzf -m | awk '{print $1}'); do
@@ -96,20 +101,47 @@ function dockerImageDelete() {
     docker image rm "$i" 1> /dev/null;
   done
 }
-# todo: make it so fzf is bypassed if there is an argument passed in
-# goal: $ dockerContainerStop *containerId* && dockerContainerDelete *containerId*
-function dockerContainerStart() { dockerCommand start ;}
-function dockerContainerStop() { dockerCommand stop ;}
-function dockerContainerRestart() { dockerCommand restart ;}
-function dockerContainerDelete() { dockerCommand rm ;}
+
+function dockerContainerStart() { dockerCommand start "$1" ;}
+function dockerContainerStop() { dockerCommand stop "$1" ;}
+function dockerContainerRestart() { dockerCommand restart "$1" ;}
+function dockerContainerDelete() { dockerCommand rm "$1" ;}
 function dockerCommand() {
-  for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
-    echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being "$*"ed
-    docker "$@" "$i" 1> /dev/null;
-  done
+  if [ ! -z "$2" ]
+    then 
+      echo container "$(docker ps -a | grep $2 | awk '{print $2}')" is being "$1"ed
+      docker "$1" "$2" 1> /dev/null;
+    else
+      for i in $(docker ps -a | fzf -m | awk '{print $1}'); do
+        echo container "$(docker ps -a | grep $i | awk '{print $2}')" is being "$*"ed
+        docker "$1" "$i" 1> /dev/null;
+      done
+  fi
 }
 function dockerContainerTerminal () { docker exec -ti "$(docker ps | fzf | awk '{print $1}')" /bin/bash ;}
 function dockerContainerExec () { docker exec "$(docker ps | fzf | awk '{print $1}')" $* ;}
+
+function dockerControl() {
+
+  # Check if the session exists, discarding output
+  # We can check $? for the exit status (zero for success, non-zero for failure)
+  tmux has-session -t dockerControl 2>/dev/null
+  if [ $? != 0 ]; 
+    then
+      tmux new-session -d -s "dockerControl";
+      tmux rename-window "containers";
+      tmux send-keys -t "dockerControl":"containers" "containers" C-m;
+
+      tmux new-window -t "dockerControl":1;
+      tmux rename-window "images";
+      tmux send-keys -t "dockerControl":"images" "images" C-m;
+
+      tmux new-window -t "dockerControl":2;
+      tmux rename-window "networks";
+      tmux send-keys -t "dockerControl":"networks" "networks" C-m;
+  fi
+  tmux attach-session -t dockerControl;
+}
 
 function gitControl() {
   WORKING_DIR=$(pwd);
@@ -122,24 +154,26 @@ function gitControl() {
     then
       # Set up your session
       tmux new-session -d -s $WORKING_DIR;
-      tmux rename-window "diffLocal";
-      tmux split-window -h;
-      tmux send-keys -t $WORKING_DIR:diffLocal.0 'gitDiffStaged' C-m;
-      tmux send-keys -t $WORKING_DIR:diffLocal.1 'gitDiffUnstaged' C-m;
-
-      tmux new-window -t "$WORKING_DIR":1;
       tmux rename-window "diffCommits";
 
       tmux split-window -v;
       tmux split-window -v;
       tmux split-window -h;
       tmux select-layout tiled;
-      tmux resizep -t $WORKING_DIR:diffCommits.0 -y "80%"
+      tmux resizep -t $WORKING_DIR:diffCommits.0 -y "70%"
 
       tmux send-keys -t $WORKING_DIR:diffCommits.0 "gitDiffCommits" C-m;
       tmux send-keys -t $WORKING_DIR:diffCommits.1 "gitCherryPick" C-m;
-      tmux send-keys -t $WORKING_DIR:diffCommits.2 "mainCommitHash $WORKING_DIR" C-m;
+      tmux send-keys -t $WORKING_DIR:diffCommits.2 "baseCommitHash $WORKING_DIR" C-m;
       tmux send-keys -t $WORKING_DIR:diffCommits.3 "diffCommitHash $WORKING_DIR" C-m;
+
+      tmux new-window -t "$WORKING_DIR":1;
+      tmux rename-window "diffLocal";
+
+      tmux split-window -h;
+      
+      tmux send-keys -t $WORKING_DIR:diffLocal.0 'gitDiffStaged' C-m;
+      tmux send-keys -t $WORKING_DIR:diffLocal.1 'gitDiffUnstaged' C-m;
   fi
   tmux attach-session -t $WORKING_DIR;
 }
@@ -147,18 +181,18 @@ function gitCherryPick() {
   for i in $(selectCommits); do git cherry-pick "$i"; done
 }
 function selectCommits() {
-  git log --pretty=oneline $(tmux showenv | sed -n "s/COMMIT_HASH=//p")...$(tmux showenv | sed -n "s/COMMIT_HASH_2=//p") | fzf \
+  git log --pretty=oneline $(tmux showenv | sed -n "s/COMMIT_HASH=//p")...$(tmux showenv | sed -n "s/COMMIT_HASH_2=//p") | fzf --prompt "select commits to cherry pick >" \
     -m --ansi \
     --bind 'ctrl-r:reload:git log --pretty=oneline $(tmux showenv | sed -n "s/COMMIT_HASH=//p")...$(tmux showenv | sed -n "s/COMMIT_HASH_2=//p")' \
     --preview 'git show --color=always {1}' \
     | awk '{print $1}'
 }
-function mainCommitHash() {
-  COMMIT_HASH=$(git log --pretty=oneline | fzf | awk '{print $1}')
+function baseCommitHash() {
+  COMMIT_HASH=$(git log --pretty=oneline | fzf --prompt "base commit hash >" | awk '{print $1}')
   tmux setenv COMMIT_HASH $COMMIT_HASH
 }
 function diffCommitHash() {
-  COMMIT_HASH_2=$(git rev-list -n 1 $(git tag -n1 --sort=-v:refname | fzf | awk '{print $1}'))
+  COMMIT_HASH_2=$(git rev-list -n 1 $(git tag -n1 --sort=-v:refname | fzf --prompt "diff commit hash >" | awk '{print $1}'))
   tmux setenv COMMIT_HASH_2 $COMMIT_HASH_2
 }
 function gitDiffCommits() {
@@ -166,7 +200,7 @@ function gitDiffCommits() {
     -m --ansi \
     --bind 'ctrl-r:reload:git diff --name-only $(tmux showenv | sed -n "s/COMMIT_HASH=//p") $(tmux showenv | sed -n "s/COMMIT_HASH_2=//p")' \
     --preview 'git diff --color=always $(tmux showenv | sed -n "s/COMMIT_HASH=//p") $(tmux showenv | sed -n "s/COMMIT_HASH_2=//p") {1}' \
-    --prompt 'git diff >' \
+    --prompt 'files in diff >' \
     --header $'CTRL-R (reload)\n'
 }
 function gitDiffUnstaged() {
@@ -207,19 +241,13 @@ function gitFileUnstage() {
     else echo 'no files selected, no changes made'
   fi
 }
-function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
+function gitStashApply() { git stash apply $(git stash list | grep "$1" | fzf --ansi --preview "echo {} | cut -d: -f1 | xargs git stash show -p" | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//') ;}
 function gitStashDelete() {
   STASH=$(git stash list | grep "$1" | fzf | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
   if [ ! -z "$STASH" ];
     then git stash drop "$STASH";
     else echo 'no stashes select or dropped';
   fi
-  # STASHES=$(git stash list | grep "$1" | fzf -m | sed -n '/:/s/stash@{//p' | sed 's/[}].*$//')
-  # echo "$STASHES"
-  # if [ ! -z "$STASHES" ];
-  #   then for i in $(printf %b "$STASHES"); do git stash drop "$i"; done;
-  #   else echo 'no stashes select or dropped';
-  # fi
 }
 #function gsa() { git stash list | grep "$1" ; echo git stash apply ; read stashNum ; git stash apply $stashNum ;}
 function gitAdd() { gitDiffUnstaged ;}
@@ -296,19 +324,16 @@ function gitBranch() { git branch --show-current; }
 function gitDeleteBranch() { git branch -D "$@"; }
 function gitCopyBranch() { git branch --show-current | $CLIPBOARD; }
 function gitCreateBranch() { git checkout -b "$@"; }
-function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
-function tclone() { (cd ~/temp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
-
-# editor functions
-function ij() { (cd ~/repos && idea "$(pwd)$(ls | fzf)") ; }
-function io() { (cd ~/temp && idea "$(pwd)$(ls | fzf)") ; }
+# function rclone() { (cd ~/repos && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
+# function tclone() { (cd ~/temp && git clone "$1" && idea "$(pwd)/$(ls | fzf)") ;}
+function rclone() { (cd ~/repos && repoName=$(git clone --progress "$1" 2>&1) && idea "$(pwd)/$(echo $repoName | sed "s/.*Cloning into '//" | sed "s/'....*//" | head -n 1)") ;}
+function tclone() { (cd ~/temp && repoName=$(git clone --progress "$1" 2>&1) && idea "$(pwd)/$(echo $repoName | sed "s/.*Cloning into '//" | sed "s/'....*//" | head -n 1)") ;}
 
 # random functions
 function mkd() { mkdir "$*" && cd "$*" ;}
-function functions() { cat ~/.zsh_functions ~/.zsh_local/.* | grep function ;}
+function functions() { cat ~/.zsh_functions ~/.zsh_local/.* ~/.zsh_optional/.* | grep function ;}
 function aliases() { grep alias ~/.zsh_aliases ;}
-function falias() { cat ~/.zsh_functions ~/.zsh_aliases | grep 'function\|alias' ;}
-# improve this to filter out previous usages of hist
+function falias() { cat ~/.zsh_functions ~/.zsh_aliases ~/.zsh_local/.* ~/.zsh_optional/.* | grep 'function\|alias' ;}
 function hist() {
   if [ ! -z "$1" ]
     then num=$(history | sort -rn | grep $1 | fzf | sed -n 's/[0-9][0-9]*//p' | sed 's/^[[:space:]]*//g'); 
@@ -316,6 +341,57 @@ function hist() {
   fi
   eval $num;
 }
+function pull() {
+  DIR="$HOME/repos"
+  for PROJECT in $(ls $DIR); do
+  (
+    cd "$DIR/$PROJECT"
+    isGitProject=$(ls -la | grep .git)
+    if [[ -n "$isGitProject" ]]; 
+      then 
+        status_ouput=$(git status --porcelain)
+        if [[ -z "$status_ouput" ]]; 
+          then git pull origin
+        fi
+    fi
+  ) &
+  done
+}
+function build() {
+  DIR="$HOME/repos"
+  for PROJECT in $(ls $DIR); do
+  (
+    cd "$DIR/$PROJECT"
+    isBuildableProject=$(ls -la | grep pom.xml)
+    if [[ -n "$isBuildableProject" ]]; 
+      then 
+        status_ouput=$(git status --porcelain)
+        if [[ -z "$status_ouput" ]]; 
+          then mist
+        fi
+    fi
+  )
+  done
+}
+
+function sync() {
+  DIR="$HOME/repos"
+  for PROJECT in $(ls $DIR); do
+  (
+		if [ -d "$DIR/$PROJECT/.run" ];
+      then
+        mkdir -p "$HOME/Documents/sync/runconfigs/$PROJECT"
+				find "$DIR/$PROJECT/.run" -type f -name "*.xml" -print0 |
+					while LC_ALL=C IFS= read -r -d '' file; do
+            mkdir -p "$HOME/Documents/sync/runconfigs/$PROJECT"
+            filename=$(echo "$file" | sed -n 's/.*.run\///p')
+            ln -s "$file" "$HOME/Documents/sync/runconfigs/$PROJECT/$filename"
+					done
+		fi
+  )
+  done
+}
+
 
 # environment management functions
 function j8() { updateEnvFile 8 ;}
@@ -330,3 +406,14 @@ function fs() { FILENAME=$(preview); if [ ! -z "$FILENAME" ] ; then micro $FILEN
 function ws() { FILENAME=$(rgf $1 $2) ; if [ ! -z "$FILENAME" ] ; then micro $FILENAME ; fi ;}
 function rgf() { rg --hidden $1 $2 -l | fzf --preview 'bat --style=default --color=always {}' ;}
 function preview() { find . -type f -not -path '*/\.git/*' | fzf --preview 'bat --style=default --color=always {}' ;}
+
+
+function hub() {
+  if [[ -f ".git/config" ]]
+    then
+      openInBrowser $(cat .git/config | grep url | sed -n "s/url = git@$(getSourceCodeUrl):/https:\/\/$(getSourceCodeUrl)\//p")
+    else
+      REPO_NAME=$(ls $HOME/repos | fzf)
+      openInBrowser $(cat "$HOME/repos/$REPO_NAME/.git/config" | grep url | sed -n "s/url = git@$(getSourceCodeUrl):/https:\/\/$(getSourceCodeUrl)\//p")
+  fi
+}
