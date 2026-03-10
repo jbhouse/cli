@@ -10,30 +10,7 @@ alias .....='cd ../../../..'
 alias update="$UPDATE"
 alias fresh="$FRESH"
 
-alias cli="cd ~/Documents/cli"
 alias pwdc="pwd | $CLIPBOARD"
-
-#editor aliases
-alias medit="micro ~/.zshrc"
-alias menv="micro ~/.zsh_env"
-alias malias="micro ~/.zsh_aliases"
-alias mfunc="micro ~/.zsh_functions"
-alias mlocal="micro ~/.zsh_local/.zsh_env_local"
-#alias mcli="mux with cli as input"
-
-alias cedit="code ~/.zshrc"
-alias cenv="code ~/.zsh_env"
-alias calias="code ~/.zsh_aliases"
-alias cfunc="code ~/.zsh_functions"
-alias ccli="code ~/Documents/cli && code ~/.zsh_local"
-alias clocal="code ~/.zsh_local/.zsh_env_local"
-
-alias iedit='idea ~/.zshrc'
-alias ienv='idea ~/.zsh_env'
-alias ialias="micro ~/.zsh_aliases"
-alias ifunc="micro ~/.zsh_functions"
-alias icli="idea ~/Documents/cli"
-alias ilocal="idea ~/.zsh_local/.zsh_env_local"
 
 # git aliases
 alias gs="git status"
@@ -66,7 +43,6 @@ alias tka="tmux kill-server"
 # alias kubectl="k3s kubectl"
 
 alias la='ls -A'
-alias q='exit'
 alias c='clear'
 alias h='history'
 alias home='cd ~'
