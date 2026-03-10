@@ -1,34 +1,78 @@
 #!/bin/bash
 
-# function kafkaPublishMessage() {
-#   # list topics, then check if json payload exists, otherwise enter input
-#   source ~/.zsh_env;
-#   TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
-#   while getopts 'e' flag; do
-#     case "${flag}" in
-#       e) micro ~/.zsh_local/kafka_messages/$TOPIC_NAME.json ;;
-#       *) print_usage
-#         exit 1 ;;
-#     esac
-#   done
-#   echo "publishing ~/.zsh_local/kafka_messages/$TOPIC_NAME.json to $TOPIC_NAME with bootstrap-server $BOOTSTRAP_SERVER"
-#   jq -rc . "$HOME/.zsh_local/kafka_messages/$TOPIC_NAME.json" | kafka-console-producer --bootstrap-server "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
-#   # to publish yourself, echo "{}" | kafka-console-producer --bootstrap-server "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
-# }
-# need to first check for the existence of path: ~/.zsh_local/kafka_messages/kafka_map.json
-# function kafkaConsumeMessage() {
-#   # list topics | fzf
-#   TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
-#   echo "consuming from $TOPIC_NAME"
-#   source ~/.zsh_env;
-#   echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@"
-#   kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@"
-# }
+function kafkaPublishMessage() {
+  if [[ -z "$KAFKA_TOPICS" ]]; then
+    KAFKA_TOPICS=$(kafka-topics --list --bootstrap-server $BOOTSTRAP_SERVER)
+  fi
+  TOPIC_NAME=$(echo $KAFKA_TOPICS | fzf)
+  DIR_NAME="$HOME/.zsh_local/kafka_messages/$TOPIC_NAME"
+  if [ ! -d "$DIR_NAME" ]; then
+    mkdir -p "$DIR_NAME"
+  fi
+  FILE_NAME=$(ls $DIR_NAME | fzf --preview "cat $DIR_NAME/{1} | jq")
+  FILE_PATH="$DIR_NAME/$FILE_NAME"
+  micro "$FILE_PATH"
+  echo "jq -rc . $FILE_PATH | kafka-console-producer --bootstrap-server $BOOTSTRAP_SERVER --topic $TOPIC_NAME"
+  jq -rc . "$FILE_PATH" | kafka-console-producer --bootstrap-server "$BOOTSTRAP_SERVER" --topic "$TOPIC_NAME"
+}
 
-# function consumeKafkaMessageFormatted() {
-#   TOPIC_NAME=$(jq < ~/.zsh_local/kafka_messages/kafka_map.json | fzf | awk '{ print $2 }' | sed 's/\"//' | sed 's/",.*$//');
-#   echo "consuming from $TOPIC_NAME"
-#   source ~/.zsh_env;
-#   echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@ | jq"
-#   kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@" | jq
-# }
+function kafkaConsumeMessage() {
+  if [[ -z "$KAFKA_TOPICS" ]]; then
+    KAFKA_TOPICS=$(kafka-topics --list --bootstrap-server $BOOTSTRAP_SERVER)
+  fi
+  TOPIC_NAME=$(echo $KAFKA_TOPICS | fzf)
+  # echo "consuming from $TOPIC_NAME"
+  # echo "kafka-console-consumer --topic $TOPIC_NAME --bootstrap-server $BOOTSTRAP_SERVER $@"
+  kafka-console-consumer --topic "$TOPIC_NAME" --bootstrap-server "$BOOTSTRAP_SERVER" "$@"
+}
+
+function kafkaSaveMessages() {
+  for topic in $(kafkaTopicsList); do
+  (
+    msg=$(kafka-console-consumer --topic $topic --bootstrap-server $BOOTSTRAP_SERVER --from-beginning --max-messages 1 --timeout-ms 10000 2> /dev/null)
+    if [[ -n "$msg" ]]; then
+      DIR="$HOME/.zsh_local/kafka_messages/$topic"
+      if [ ! -d "$DIR" ]; then
+          mkdir -p "$DIR"
+      fi
+
+      echo $msg > "$HOME/.zsh_local/kafka_messages/$topic/default.json"
+    fi
+  ) &
+  done
+  wait
+  ls "$HOME/.zsh_local/kafka_messages/"
+}
+
+function kafkaMessagesFor() {
+  pane=0
+  window=0
+  for topic in $(kafkaTopicsList | fzf -m); do
+    if [ $pane -eq 0 ]; then tmux new-session -d -s "allKafkaMessages";
+      else
+        n=$(($pane%5))
+        if [ $n -eq 0 ];
+          then
+            ((window++));
+            pane=0;
+            tmux new-window -t allKafkaMessages:$window;
+          else
+            tmux split-window -h;
+        fi
+    fi
+    tmux send-keys -t allKafkaMessages:$window.$pane "kafka-console-consumer --topic $topic --bootstrap-server $BOOTSTRAP_SERVER" C-m;
+    ((pane++))
+  done
+  tmux select-layout -t allKafkaMessages:0 tiled
+  tmux attach -t allKafkaMessages
+}
+
+function kafkaTopicsList() {
+  if [[ -z "$KAFKA_TOPICS" ]]; then
+    KAFKA_TOPICS=$(kafka-topics --list --bootstrap-server $BOOTSTRAP_SERVER)
+  fi
+  if [ ! -z "$1" ]
+    then echo $KAFKA_TOPICS | grep $1
+    else echo $KAFKA_TOPICS
+  fi
+}
