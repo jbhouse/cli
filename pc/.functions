@@ -2,4 +2,5 @@
 
 function code () { cmd.exe /c code }
 function updateEnvFile() { sed -i "/JAVA_HOME=/c export JAVA_HOME=/usr/lib/jvm/$(ls /usr/lib/jvm | grep java-$1)" ~/.zsh_env && fresh ;}
-function hub() { cmd.exe /c start microsoft-edge:$(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p' | sed 's/^[[:space:]]*//g') ;}
+# function hub() { cmd.exe /c start microsoft-edge:$(cat .git/config | grep url | sed -n 's/url = git@github.com:/https:\/\/github.com\//p' | sed 's/^[[:space:]]*//g') ;}
+function openInBrowser() { cmd.exe /c start microsoft-edge:"$@" ;}
